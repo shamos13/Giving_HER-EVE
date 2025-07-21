@@ -4,7 +4,7 @@ const Header = () => {
             <div className="mx-auto flex justify-between items-center py-4 px-6 md:px-20 lg:px-32">
                 <img src="logo.svg" alt="Logo" className="h-6 w-auto object-contain" />
                 <ul className="hidden md:flex space-x-8 text-black">
-                    <a href="#home" className="hover:text-purple-950">Home</a>
+                    <a href="#home" className="hover:text-purple-300">Home</a>
                     <a href="#events" className="hover:text-purple-950">Events</a>
                     <a href="#aboutUs" className="hover:text-purple-950">About Us</a>
                     <a href="#contactUs" className="hover:text-purple-950">Contact Us</a>
