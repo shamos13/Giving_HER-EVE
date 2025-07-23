@@ -3,12 +3,13 @@ import NewsLetter from "../components/NewsLetter.jsx";
 import Testimonials from "../components/Testimonials.jsx";
 import SuccessStories from "../components/SuccessStories.jsx";
 import header_img from "../assets/header_img.png"
+import Community from "../components/Community.jsx";
 
-import {Plus, GraduationCap, Section} from "lucide-react";
+import {Plus, GraduationCap} from "lucide-react";
 
 const HeroSection = () => {
     return (
-        <section className="relative w-full min-h-screen bg-[#6A0DAD] flex flex-col lg:flex-row  text-white overflow-hidden mb-20">
+        <section className="relative w-full min-h-screen bg-[#6A0DAD] flex flex-col lg:flex-row overflow-hidden mb-20">
             {/* Background Image with Overlay */}
             <div className="absolute inset-0 z-0 ">
                 <img
@@ -17,11 +18,11 @@ const HeroSection = () => {
                     className="w-1/2 h-full object-cover aspect-3/2"
                 />
                 {/* Gradient */}
-                <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD]  via-purple-900"/></div>
+                <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD]  via-purple-900"/>
+            </div>
 
             {/* Content */}
-            <div
-                className="relative z-10 mx-auto flex flex-col items-center justify-center  text-center  px-6 py-16 mr-30 lg:-mt-50 ">
+            <div className="relative z-10 mx-auto flex flex-col items-center justify-center  text-center text-white px-6 py-16 mr-30 lg:-mt-50 ">
                 <h1 className="text-4xl lg:text-7xl font-playfair font-bold tracking-wide">
                     Giving Her <span className="font-playball">E . V . E ,</span>
                 </h1>
@@ -124,7 +125,7 @@ const AboutUs = ()=>{
                     <img
                         src="vector.png"
                         alt="Smiling Girl"
-                        className="w-full object-cover"
+                        className="w-full object-cover aspect-3/2"
                     />
                 </div>
 
@@ -185,8 +186,9 @@ const HomePage = () => {
             <Header/>
             <HeroSection/>
             <CharityService/>
-            <AboutUs/>
             <SuccessStories/>
+            <AboutUs/>
+            <Community/>
             <Testimonials/>
             <NewsLetter/>
         </div>
