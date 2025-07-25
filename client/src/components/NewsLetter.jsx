@@ -9,9 +9,8 @@ const NewsLetter = ()=> {
                         <h2 className="text-4xl font-semibold tracking-tight text-white">Subscribe to our
                             newsletter</h2>
                         <p className="mt-4 text-lg text-gray-300">
-                            Nostrud amet eu ullamco nisi aute in ad minim nostrud adipisicing velit quis. Duis tempor
-                            incididunt
-                            dolore.
+                            Be the first to hear powerful stories, updates from the field,
+                            and ways you can help empower women and girls—straight to your inbox.
                         </p>
                         <div className="mt-6 flex max-w-md gap-x-4">
                             <label htmlFor="email-address" className="sr-only">
@@ -41,8 +40,7 @@ const NewsLetter = ()=> {
                             </div>
                             <dt className="mt-4 text-base font-semibold text-white">Weekly articles</dt>
                             <dd className="mt-2 text-base/7 text-gray-400">
-                                Non laboris consequat cupidatat laborum magna. Eiusmod non irure cupidatat duis commodo
-                                amet.
+                                Stories of hope, impact, and progress
                             </dd>
                         </div>
                         <div className="flex flex-col items-start">
@@ -51,12 +49,16 @@ const NewsLetter = ()=> {
                             </div>
                             <dt className="mt-4 text-base font-semibold text-white">No spam</dt>
                             <dd className="mt-2 text-base/7 text-gray-400">
-                                Officia excepteur ullamco ut sint duis proident non adipisicing. Voluptate incididunt
-                                anim.
+                                Just honest updates and opportunities to make a difference
                             </dd>
                         </div>
                     </dl>
+                    <div className="absolute bottom-20 flex flex-col mx-auto items-center justify">
+                        <p className="text-white font-semibold text-gray-900">Unsubscribe at any time view our
+                        <a href="#privacy policy" className="text-blue-400">privacy policy</a></p>
+                    </div>
                 </div>
+
             </div>
             <div aria-hidden="true" className="absolute top-0 left-1/2 -z-10 -translate-x-1/2 blur-3xl xl:-top-6">
                 <div

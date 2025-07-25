@@ -9,7 +9,7 @@ const Header = () => {
                     <a href="#aboutUs" className="hover:text-purple-950">About Us</a>
                     <a href="#contactUs" className="hover:text-purple-950">Contact Us</a>
                 </ul>
-                <button className="hidden md:block bg-purple-700 hover:bg-purple-900 text-white px-8 py-2 rounded-full ">Donate</button>
+                <button className="hidden md:block bg-[#F036DC] hover:bg-purple-900 text-white px-8 py-2 rounded-full ">Donate</button>
             </div>
         </header>
     )

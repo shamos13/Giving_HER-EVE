@@ -4,26 +4,24 @@ import Testimonials from "../components/Testimonials.jsx";
 import SuccessStories from "../components/SuccessStories.jsx";
 import header_img from "../assets/header_img.png"
 import Community from "../components/Community.jsx";
+import bg_image from "../assets/Image.png"
 
-import {Plus, GraduationCap} from "lucide-react";
+import {Plus, GraduationCap, Heart} from "lucide-react";
+import Steps from "../components/Steps.jsx";
 
 const HeroSection = () => {
     return (
-        <section className="relative w-full min-h-screen bg-[#6A0DAD] flex flex-col lg:flex-row overflow-hidden mb-20">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden mb-20">
             {/* Background Image with Overlay */}
-            <div className="absolute inset-0 z-0 ">
-                <img
-                    src={header_img}
-                    alt="Smiling Girl"
-                    className="w-1/2 h-full object-cover aspect-3/2"
+            <div className="absolute inset-0 bg-cover bg-center bg-no-repeat md:w-1/2 sm:w-full"
+                style={{backgroundImage: `url(${header_img})`}}
                 />
-                {/* Gradient */}
-                <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD]  via-purple-900"/>
-            </div>
+            {/* Gradient */}
+            <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD] from-50%"/>
 
             {/* Content */}
-            <div className="relative z-10 mx-auto flex flex-col items-center justify-center  text-center text-white px-6 py-16 mr-30 lg:-mt-50 ">
-                <h1 className="text-4xl lg:text-7xl font-playfair font-bold tracking-wide">
+            <div className="relative z-10 max-w-7xl sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white ">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance font-playfair">
                     Giving Her <span className="font-playball">E . V . E ,</span>
                 </h1>
                 <h2 className="text-3xl lg:text-7xl font-playball mt-4">
@@ -36,11 +34,11 @@ const HeroSection = () => {
                 </p>
                 <div className="mt-8 flex gap-4">
                     <button
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2 rounded-full font-semibold">
-                        Watch Video
+                        className="bg-[#F036DC] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-semibold">
+                        Donate Now
                     </button>
                     <button className="border border-white text-white px-6 py-2 rounded-full font-semibold">
-                        Donate Now
+                        Learn More
                     </button>
                 </div>
             </div>
@@ -65,16 +63,16 @@ const HeroSection = () => {
 
 }
 
-const CharityService = () =>{
-    return(
+const CharityService = () => {
+    return (
         <section className="relative px-6 md:px-20 py-20 bg-white w-full bg-gray-300">
-            <div className="max-w-7xl mx-auto">
-                <h2 className="text-sm lg:text-xl font-bold tracking-wide text-purple-600 mb-6">CHARITY SERVICE</h2>
+        <div className="max-w-7xl mx-auto">
+                <h2 className="text-sm lg:text-xl font-bold tracking-wide text-[#F036DC] mb-6">CHARITY SERVICE</h2>
                 <h1 className="font-bold text-2xl mb-2">For Her. With Her. Always</h1>
                 <p className="text-gray-600 max-w-2xl">We believe in a world where every woman is seen, supported, and empowered—with love leading every step we take.</p>
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8 max-w-none">
                     {/*Service Cards*/}
-                    <div className="bg-purple-700 text-white p-8 rounded-lg  shadow-lg relative overflow-hidden min-h-[250px]">
+                    <div className="bg-purple-700 text-white p-8 rounded-lg  shadow-lg relative overflow-hidden min-h-[250px] ">
                         <h3 className="text-2xl font-bold mb-4">Menstrual Health</h3>
                         <p className="text-purple-100 leading-relaxed">
                             Providing free menstrual kits, health education, and support for girls and women in
@@ -84,12 +82,16 @@ const CharityService = () =>{
                             <Plus size={68} className="text-white"/>
                         </div>
                     </div>
-                    <div className="bg-white border border-gray-200 p-8 rounded-lg shadow-lg">
+                    <div className="relative bg-white border border-gray-200 p-8 rounded-lg shadow-lg">
                         <h3 className="text-2xl font-bold text-black mb-4">Food and Clothing Drive</h3>
                         <p className="text-gray-600 leading-relaxed">
                             Delivering essential nourishment and clothing to women and girls in need — because survival
                             shouldn't be a struggle.
                         </p>
+                        <div className="absolute bottom-3 right-6 opacity-20">
+                            <Heart className="h-8 w-8"/>
+                        </div>
+
                     </div>
                     <div className="bg-white border border-gray-200 p-8 rounded-lg shadow-lg relative overflow-hidden">
                         <h3 className="text-2xl font-bold text-black mb-4">School Kits</h3>
@@ -177,19 +179,46 @@ const AboutUs = ()=>{
     )
 }
 
+const CallToAction = ()=>{
+    return(
+        <section className="relative py-20 bg-[#6A0DAD] text-white mb-10">
+            <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+                 style={{backgroundImage: `url(${bg_image})`}}>
 
-
+            </div>
+            <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">
+                    Be Part of the Change
+                </h2>
+                <p className="text-xl mb-8 text-balance">
+                    Your support creates lasting impact. Join us in empowering women and transforming communities
+                    across East Africa.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                        className="bg-[#F036DC] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-semibold">
+                        Donate Now
+                    </button>
+                    <button className="border border-white text-white px-6 py-2 rounded-full font-semibold">
+                        Volunteer With Us
+                    </button>
+                </div>
+            </div>
+        </section>
+    )
+}
 
 const HomePage = () => {
     return (
-        <div>
+        <div className="min-h-screen">
             <Header/>
             <HeroSection/>
             <CharityService/>
             <SuccessStories/>
-            <AboutUs/>
+            <Steps/>
             <Community/>
             <Testimonials/>
+            <CallToAction/>
             <NewsLetter/>
         </div>
     )
