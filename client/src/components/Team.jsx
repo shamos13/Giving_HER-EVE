@@ -42,7 +42,7 @@ const teamMembers = [
     },
     {
         id: 6,
-        name: "Beverly Chacha",
+        name: "Beverly Chaa",
         position: "Social Media Strategist",
         image: "head.png",
         linkedinUrl: "#"
