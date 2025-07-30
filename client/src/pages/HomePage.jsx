@@ -8,6 +8,7 @@ import bg_image from "../assets/Image.png"
 
 import {Plus, GraduationCap, Heart, ArrowRight} from "lucide-react";
 import Steps from "../components/Steps.jsx";
+import Team from "../components/Team.jsx";
 
 const HeroSection = () => {
     return (
@@ -224,6 +225,7 @@ const HomePage = () => {
             <Community/>
             <Testimonials/>
             <CallToAction/>
+            <Team/>
             <Footer/>
         </div>
     )
