@@ -1,12 +1,12 @@
 import Header from "../components/Header.jsx";
-import NewsLetter from "../components/NewsLetter.jsx";
+import Footer from "../components/Footer.jsx";
 import Testimonials from "../components/Testimonials.jsx";
 import SuccessStories from "../components/SuccessStories.jsx";
 import header_img from "../assets/header_img.png"
 import Community from "../components/Community.jsx";
 import bg_image from "../assets/Image.png"
 
-import {Plus, GraduationCap, Heart} from "lucide-react";
+import {Plus, GraduationCap, Heart, ArrowRight} from "lucide-react";
 import Steps from "../components/Steps.jsx";
 
 const HeroSection = () => {
@@ -113,6 +113,11 @@ const CharityService = () => {
                     className="top-0 w-30 h-30"
                 />
             </div>
+            {/* Button */}
+            <div className="flex items-center justify-center mt-10">
+                <button className="bg-[#F036DC] text-white px-6 py-2 rounded-full font-semibold flex items-center justify-center">
+                    Learn About Our Work <ArrowRight className="ml-2 h-5 w-5"/></button>
+            </div>
         </section>
     )
 }
@@ -200,7 +205,7 @@ const CallToAction = ()=>{
                         Donate Now
                     </button>
                     <button className="border border-white text-white px-6 py-2 rounded-full font-semibold">
-                        Volunteer With Us
+                        Contact Us
                     </button>
                 </div>
             </div>
@@ -219,7 +224,7 @@ const HomePage = () => {
             <Community/>
             <Testimonials/>
             <CallToAction/>
-            <NewsLetter/>
+            <Footer/>
         </div>
     )
 }
