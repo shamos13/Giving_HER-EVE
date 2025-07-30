@@ -1,18 +1,19 @@
 import robi from "../assets/team-member-1.jpg"
 import nelson from "../assets/team-member-2.jpg"
 import joy from "../assets/team-member-3.jpg"
-
+import wankio from "../assets/team-member-4.jpg"
+import amos from "../assets/team-member-5.jpg"
 const teamMembers = [
     {
         id: 1,
-        name: "Patience Chacha",
+        name: "Patience Mandela",
         position: "C.E.O / Founder",
         image: robi,
         linkedinUrl: "#"
     },
     {
         id: 2,
-        name: "Nelson Kimani",
+        name: "Nelson Mandela",
         position: "Treasurer & Chairman",
         image: nelson,
         linkedinUrl: "#"
@@ -21,9 +22,32 @@ const teamMembers = [
         id: 3,
         name: "Joylois Kwatuha",
         position: "Project Manager",
-        image: joy,
+        image: joy
+        ,
         linkedinUrl: "#"
     },
+    {
+        id: 4,
+        name: "Precious Chacha",
+        position: "Secretary & Administrator",
+        image: wankio,
+        linkedinUrl: "#"
+    },
+    {
+        id: 5,
+        name: "Amos Kwatuha",
+        position: "Technical Advisor",
+        image: amos,
+        linkedinUrl: "#"
+    },
+    {
+        id: 6,
+        name: "Beverly Chacha",
+        position: "Social Media Strategist",
+        image: "head.png",
+        linkedinUrl: "#"
+    }
+
 
 ];
 
@@ -41,10 +65,11 @@ const Team = ()=>{
                     </h2>
                 </div>
             </div>
-            {/* Team  */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
-                {teamMembers.map((member) => (
-                    <div key={member.id} className="bg-card rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 w-80">
+            {/* Team  Scrollable */}
+            <div className="overflow-x-auto pb-4">
+               <div className="flex gap-8 w-max">
+                {teamMembers.map((member,index) => (
+                    <div key={member.id} className="bg-card rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 w-64">
                         {/* Member Image */}
                         <div className="w-full aspect-[4/5] mb-6 overflow-hidden rounded-xl">
                             <img
@@ -67,13 +92,16 @@ const Team = ()=>{
 
                             {/* LinkedIn Button */}
                             <button
-                                className="bg-[#F036DC] text-white hover:bg-[#F036DC]/90 rounded-full px-8 py-3 font-semibold transition-all duration-300 transform hover:scale-105 w-auto"
+                                className={`text-white rounded-full px-8 py-3 font-semibold transition-all duration-300 transform hover:scale-105 w-auto ${
+                                    index === 1 || index === 3 || index === 5 ? "bg-purple-500" : "bg-[#F036DC]"
+                                }`}
                             >
                                 LinkedIn
                             </button>
                         </div>
                     </div>
                 ))}
+               </div>
             </div>
         </section>
     )
