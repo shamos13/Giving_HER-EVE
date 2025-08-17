@@ -69,7 +69,7 @@ const Team = ()=>{
             <div className="overflow-x-auto pb-4">
                <div className="flex gap-8 w-max">
                 {teamMembers.map((member,index) => (
-                    <div key={member.id} className="bg-card rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 w-64">
+                    <div key={member.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 w-80">
                         {/* Member Image */}
                         <div className="w-full aspect-[4/5] mb-6 overflow-hidden rounded-xl">
                             <img

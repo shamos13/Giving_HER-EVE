@@ -20,7 +20,7 @@ const SuccessStories = () => {
                     <div className="col-span-1 md:col-span-3 lg:col-span-4 relative group overflow-hidden rounded-lg">
                         <div className="w-full aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 relative">
                             <img
-                                src="1.png"
+                                src="2.jpg"
                                 alt="Happy children"
                                 className="w-full h-full object-cover opacity-80"
                             />
@@ -41,7 +41,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-square">
                             <div className="w-full h-full bg-gradient-to-br from-[#6A0DAD] to-red-600 relative">
                                 <img
-                                    src="smiling.png"
+                                    src="1.jpg"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
@@ -60,7 +60,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-square">
                             <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 relative">
                                 <img
-                                    src="2.png"
+                                    src="3.jpg"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
@@ -82,7 +82,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-[4/3] flex-1">
                             <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 relative">
                                 <img
-                                    src="5.png"
+                                    src="4.jpg"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
@@ -101,7 +101,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-[3/2]">
                             <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 relative">
                                 <img
-                                    src="4.png"
+                                    src="5.jpg"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
