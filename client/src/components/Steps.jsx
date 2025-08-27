@@ -1,3 +1,5 @@
+import {Heart} from "lucide-react";
+
 const processSteps = [
     {
         step: "1",
@@ -58,3 +60,4 @@ const Steps = () => {
 }
 
 export default Steps;
+
