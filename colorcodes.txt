@@ -1,0 +1,46 @@
+/* Brand Colors - Purple & Gold Theme */
+--background: hsl(0 0% 98%);              /* #FAFAFA */
+--foreground: hsl(255 8% 15%);            /* #232027 */
+
+--card: hsl(0 0% 100%);                   /* #FFFFFF */
+--card-foreground: hsl(255 8% 15%);       /* #232027 */
+
+--popover: hsl(0 0% 100%);                /* #FFFFFF */
+--popover-foreground: hsl(255 8% 15%);    /* #232027 */
+
+/* Primary Purple - Dignity & Trust */
+--primary: hsl(277 89% 35%);              /* #6A0DAD */
+--primary-foreground: hsl(0 0% 100%);     /* #FFFFFF */
+--primary-light: hsl(277 89% 45%);        /* #8B0FE4 */
+--primary-dark: hsl(277 89% 25%);         /* #470974 */
+
+/* Secondary Gold - Warmth & Value */
+--secondary: hsl(51 100% 50%);            /* #FFD700 */
+--secondary-foreground: hsl(255 8% 15%);  /* #232027 */
+--secondary-light: hsl(51 100% 60%);      /* #FFE866 */
+--secondary-dark: hsl(51 100% 40%);       /* #CCAC00 */
+
+/* Neutral Palette */
+--muted: hsl(210 40% 96%);                /* #ECF3F8 */
+--muted-foreground: hsl(215 16% 47%);     /* #637081 */
+
+--accent: hsl(277 89% 95%);               /* #F7ECFB */
+--accent-foreground: hsl(277 89% 35%);    /* #6A0DAD */
+
+--destructive: hsl(0 84% 60%);            /* #E53935 */
+--destructive-foreground: hsl(0 0% 98%);  /* #FAFAFA */
+
+--border: hsl(220 13% 91%);               /* #E3E7ED */
+--input: hsl(220 13% 91%);                /* #E3E7ED */
+--ring: hsl(277 89% 35%);                 /* #6A0DAD */
+
+/* Sidebar */
+--sidebar-background: hsl(0 0% 98%);      /* #FAFAFA */
+--sidebar-foreground: hsl(240 5.3% 26.1%);/* #3F3F44 */
+--sidebar-primary: hsl(240 5.9% 10%);     /* #19191C */
+--sidebar-primary-foreground: hsl(0 0% 98%); /* #FAFAFA */
+--sidebar-accent: hsl(240 4.8% 95.9%);    /* #F4F4F7 */
+--sidebar-accent-foreground: hsl(240 5.9% 10%); /* #19191C */
+--sidebar-border: hsl(220 13% 91%);       /* #E3E7ED */
+--sidebar-ring: hsl(217.2 91.2% 59.8%);   /* #3B82F6 */
+
