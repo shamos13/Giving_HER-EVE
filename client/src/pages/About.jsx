@@ -78,7 +78,7 @@ const About = () =>{
                         </div>
                         <div className="relative">
                             <img
-                                src="about.jpeg"
+                                src="about.avif"
                                 alt="Team Photo"
                                 className="rounded-2xl shadow-elegant w-full h-96 object-cover"
                             />
