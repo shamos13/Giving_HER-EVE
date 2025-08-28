@@ -1,7 +1,8 @@
-import {Heart, Users, Target, Eye, Award} from "lucide-react";
+import {Heart, Users, Target, Eye, Award, Globe} from "lucide-react";
 import Header from "../components/Header.jsx";
 import Team from "../components/Team.jsx";
 import Footer from "../components/Footer.jsx";
+import bg_image from "../assets/Image.png";
 
 const About = () =>{
     const values = [
@@ -163,7 +164,39 @@ const About = () =>{
             <Team/>
 
             {/* Impact Preview */}
-            <section className="py-20 bg-purple-700"></section>
+            <section className="relative py-20 bg-[#6A0DAD] text-white">
+
+                <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-35"
+                     style={{backgroundImage: `url(${bg_image})`}}>
+
+                </div>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <Globe className="h-16 w-16 mx-auto mb-6 text-[#FFD700]"/>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance"> Our Reach </h2>
+                    <p className="text-xl text-white/90 mb-8 text-balance">
+                        From humble beginnings in one community, we now support women and girls across 15 communities
+                        in East Africa, with plans to expand our reach even further.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                        <div>
+                            <div className="text-3xl font-bold text-[#FFD700] mb-2">15</div>
+                            <div className="text-sm text-white/80">Communities</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-[#FFD700] mb-2">2500</div>
+                            <div className="text-sm text-white/80">Lives Impacted</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-[#FFD700] mb-2">50+</div>
+                            <div className="text-sm text-white/80">Volunteers</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-[#FFD700] mb-2">5</div>
+                            <div className="text-sm text-white/80">Year Active</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <Footer/>
         </div>
