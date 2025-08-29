@@ -7,7 +7,7 @@ import wankio from "../assets/team-member-4.jpg"
 import amos from "../assets/team-member-5.jpg"
 
 
-const DevotedTeamSection = () => {
+const Team = () => {
     const [currentPage, setCurrentPage] = useState(0);
 
     const teamMembers = [
@@ -106,8 +106,8 @@ const DevotedTeamSection = () => {
                     {' '}Team
                 </h2>
                 <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-                    They are the driving force of our mission, infusing their European heritage and
-                    global experience into our philanthropic endeavors.
+                    Behind Giving Her E.V.E is a team of passionate individuals who believe in equality, voice, and empowerment.
+                    Together, we bring skills, compassion, and vision to transform communities one girl at a time.
                 </p>
             </div>
 
@@ -140,4 +140,4 @@ const DevotedTeamSection = () => {
     );
 };
 
-export default DevotedTeamSection;
+export default Team;

@@ -3,6 +3,7 @@ import Header from "../components/Header.jsx";
 import Team from "../components/Team.jsx";
 import Footer from "../components/Footer.jsx";
 import bg_image from "../assets/Image.png";
+import TeamAbout from "../components/TeamAbout.jsx";
 
 const About = () =>{
     const values = [
@@ -157,11 +158,11 @@ const About = () =>{
 
                             </div>
 
-                                ))};
+                                ))}
                     </div>
                 </div>
             </section>
-            <Team/>
+            <TeamAbout/>
 
             {/* Impact Preview */}
             <section className="relative py-20 bg-[#6A0DAD] text-white">
