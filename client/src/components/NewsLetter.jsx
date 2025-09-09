@@ -2,12 +2,12 @@ import bg_image from "../assets/Image.png";
 
 const NewsLetter = () => {
     return(
-        <section className="relative mt-10 py-20 bg-purple-800 text-white">
-            <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-35"
+        <section className="relative mt-10 py-20 bg-[#6A0DAD] text-white">
+            <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-30"
                  style={{backgroundImage: `url(${bg_image})`}}>
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">
                     Stay Connected
                 </h2>

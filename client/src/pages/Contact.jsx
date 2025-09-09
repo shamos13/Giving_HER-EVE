@@ -336,6 +336,7 @@ const Contact = () => {
                 </div>
             </section>
             <FAQs/>
+            <NewsLetter/>
             <Footer/>
         </div>
     )
