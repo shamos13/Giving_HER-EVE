@@ -1,6 +1,7 @@
 import {useState} from "react";
-import {Clock, Mail, MapPin, MessageCircle, Phone} from "lucide-react";
+import {Users, Mail, MapPin, MessageCircle, Phone, Send, Heart} from "lucide-react";
 import Header from "../components/Header.jsx";
+import {Input} from "@headlessui/react";
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -11,6 +12,22 @@ const Contact = () => {
         inquiry_type: "",
         message: "",
     });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('Form submitted:', formData);
+        alert('Message sent successfully!');
+        // Handle form submission here
+    };
+
 
     const contactInfo = [
         {
@@ -97,7 +114,7 @@ const Contact = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {contactInfo.map((info, index) => (
 
-                        <div key={index} className="text-[#232027] srounded-lg border border-0 shadow-sm text-center">
+                        <div key={index} className="text-[#232027] rounded-lg border border-0 shadow-sm text-center">
                             <div className="p-6 ">
                                 <div className="text-[#6A0DAD] mb-4">
                                     {info.icon}
@@ -124,10 +141,198 @@ const Contact = () => {
             <section className="py-20 bg-[#ECF3F8]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        {/* Contact Form */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white rounded-lg shadow-lg p-8">
+                                <div className="p-6">
+                                    <h3 className="text-2xl font-bold text-[#232027] mb-6"> Send Us A message</h3>
+                                        <form className="space-y-6">
+                                            {/* Name and Email */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2"
+                                                           htmlFor="name"> Full Name <span
+                                                        className="text-red-500">*</span></label>
+                                                    <input
+                                                        type="text"
+                                                        id="fullName"
+                                                        name="fullName"
+                                                        value={formData.name}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                                    />
+                                                </div>
 
+                                                <div>
+                                                    <label htmlFor="email"
+                                                           className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Email Address <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="email"
+                                                        id="email"
+                                                        name="email"
+                                                        value={formData.email}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                                {/* Phone and Inquiry type Row */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div>
+                                                        <label htmlFor="phone"
+                                                               className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Phone Number
+                                                        </label>
+                                                        <input
+                                                            type="tel"
+                                                            id="phone"
+                                                            name="phone"
+                                                            value={formData.phone}
+                                                            onChange={handleInputChange}
+                                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label htmlFor="inquiryType"
+                                                               className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Inquiry Type
+                                                        </label>
+                                                        <select
+                                                            id="inquiryType"
+                                                            name="inquiryType"
+                                                            value={formData.inquiry_type}
+                                                            onChange={handleInputChange}
+                                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white"
+                                                        >
+                                                            <option value="">Select inquiry type</option>
+                                                            {inquiryTypes.map((type) => (
+                                                                <option key={type.value} value={type.value}>{type.label}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                            </div>
+                                            {/* Subject */}
+                                            <div>
+                                                <label htmlFor="subject"
+                                                       className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Subject <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="subject"
+                                                    name="subject"
+                                                    value={formData.subject}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                                />
+                                            </div>
+
+                                            {/* Message */}
+                                            <div>
+                                                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Message <span className="text-red-500">*</span>
+                                                </label>
+                                                <textarea
+                                                    id="message"
+                                                    name="message"
+                                                    rows="6"
+                                                    value={formData.message}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                    placeholder="Tell us how we can help you..."
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none"
+                                                />
+                                            </div>
+
+                                            {/* Submit Button */}
+                                            <button
+                                                onClick={handleSubmit}
+                                                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
+                                            >
+                                                Send Message
+                                                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                                            </button>
+                                        </form>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div className="space-y-6">
+                            {/* Join Our Team */}
+                            <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+                                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Users className="w-8 h-8 text-purple-600" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Join Our Team</h3>
+                                <p className="text-gray-600 mb-4 text-sm">
+                                    Ready to volunteer? Apply now and start making a difference.
+                                </p>
+                                <button
+                                    onClick={() => alert('Volunteer application coming soon!')}
+                                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                                >
+                                    Volunteer Application
+                                </button>
+                            </div>
+
+                            {/* Make a Donation */}
+                            <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+                                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Heart className="w-8 h-8 text-purple-600" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Make a Donation</h3>
+                                <p className="text-gray-600 mb-4 text-sm">
+                                    Support our programs with a secure online donation.
+                                </p>
+                                <button
+                                    onClick={() => alert('Donation page coming soon!')}
+                                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                                >
+                                    Donate Now
+                                </button>
+                            </div>
+
+                            {/* Emergency Contact */}
+                            <div className="bg-white rounded-2xl shadow-lg p-6">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Emergency Contact</h3>
+                                <p className="text-gray-600 mb-4 text-sm">
+                                    For urgent matters or emergencies related to our beneficiaries:
+                                </p>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <Phone className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                                        <a
+                                            href="tel:+254 792 496622"
+                                            className="text-gray-700 font-medium hover:text-purple-600 transition-colors"
+                                        >
+                                            +254 792 496622
+                                        </a>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Mail className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                                        <a
+                                            href="mailto:emergency@givinghereve.org"
+                                            className="text-gray-700 font-medium break-all hover:text-purple-600 transition-colors"
+                                        >
+                                            emergency@givinghereve.org
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </section>
+
         </div>
     )
 }
