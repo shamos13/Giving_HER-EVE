@@ -2,6 +2,7 @@ import {useState} from "react";
 import {Users, Mail, MapPin, MessageCircle, Phone, Send, Heart} from "lucide-react";
 import Header from "../components/Header.jsx";
 import {Input} from "@headlessui/react";
+import FAQs from "../components/FAQs.jsx";
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -332,7 +333,7 @@ const Contact = () => {
                     </div>
                 </div>
             </section>
-
+            <FAQs/>
         </div>
     )
 }
