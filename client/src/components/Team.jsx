@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Instagram, Twitter, Linkedin, Facebook } from 'lucide-react';
+import {Instagram, Twitter, Linkedin, Facebook } from 'lucide-react';
 import robi from "../assets/team-member-1.jpg"
 import nelson from "../assets/team-member-2.jpg"
 import joy from "../assets/team-member-3.jpg"
