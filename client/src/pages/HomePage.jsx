@@ -17,8 +17,8 @@ const HeroSection = () => {
             <div className="absolute inset-0 bg-cover bg-center bg-no-repeat md:w-1/2 sm:w-full"
                 style={{backgroundImage: `url(${header_img})`}}
                 />
-            {/* Gradient */}
-            <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD] from-50%"/>
+            {/* Responsive Gradient */}
+            <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD] from-15%% via-[#6A0DAD]"/>
 
             {/* Content */}
             <div className="relative z-10 max-w-7xl sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white ">
