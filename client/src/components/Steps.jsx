@@ -3,21 +3,21 @@ import {Heart} from "lucide-react";
 const processSteps = [
     {
         step: "1",
-        title: "Community Outreach",
-        description:
-            "We engage directly with women, girls, and local leaders in underserved communities to understand their unique needs and challenges."
-    },
-    {
-        step: "2",
         title: "Needs Assessment",
         description:
             "We assess urgent necessities such as menstrual hygiene, nutrition, clothing, and school materials through on-ground surveys and partnerships."
     },
     {
-        step: "3",
+        step: "2",
         title: "Resource Mobilization",
         description:
             "Through donations, volunteers, and local partnerships, we gather and prepare kits and supplies tailored to each community's needs."
+    },
+    {
+        step: "3",
+        title: "Community Outreach",
+        description:
+            "We engage directly with women, girls, and local leaders in underserved communities to understand their unique needs and challenges."
     },
     {
         step: "4",
