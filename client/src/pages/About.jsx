@@ -53,27 +53,23 @@ const About = () =>{
                             <h2 className="text-3xl md:text-4xl font-bold text-[#232027] mb-6"> Our Story </h2>
                             <div className="space-y-4 text-[#637081] leading-relaxed">
                                 <p>
-                                    Giving Her E.V.E was born from a simple but powerful realization: when women and
-                                    girls
-                                    are empowered with basic necessities and opportunities, entire communities flourish.
+                                    What began as a conversation about dignity and sustainability in a small community has grown into a movement. We started by listening—to mothers, daughters, teachers,
+                                    and health workers in remote villages.
+                                    They told us that periods were not just a biological process, but a barrier.
                                 </p>
                                 <p>
-                                    Founded in 2019 in Nairobi, Kenya, our organization began by addressing one of the
-                                    most
-                                    fundamental barriers to girls' education – menstrual health. We quickly realized
-                                    that
-                                    supporting women and girls required a holistic approach.
+                                    Armed with recyclable products, educational tools,
+                                    and an unshakable belief that menstruation should
+                                    never be a source of shame or missed opportunity, we began small. One kit. One session. One girl at a time.
                                 </p>
                                 <p>
-                                    Today, we work across multiple communities in East Africa, providing not just
-                                    menstrual
-                                    health kits, but also food support, educational resources, and community empowerment
-                                    programs. Our approach is community-driven, culturally sensitive, and focused on
-                                    sustainable impact.
+                                    Over the years, we’ve witnessed more than just improved health. We’ve seen girls return to school,
+                                    communities open up dialogue, and women take leadership roles in reshaping menstrual norms.
+                                    With every partnership, every workshop, and every product distributed, we move closer to our vision of menstrual equity and environmental responsibility.
                                 </p>
                                 <p>
-                                    Every woman and girl we support becomes an advocate for change in her own community,
-                                    creating a ripple effect of empowerment that extends far beyond our direct reach.
+                                    Our journey is far from over — but every step forward is taken together,
+                                    hand-in-hand with the communities we serve.
                                 </p>
                             </div>
                         </div>
@@ -98,10 +94,10 @@ const About = () =>{
                                 <Target className="h-12 w-12 text-[#6A0DAD] mx-auto mb-6"/>
                                 <h3 className="text-2xl font-bold text-[#232027] mb-4"> Our Mission</h3>
                                 <p className="text-[#637081] leading-relaxed">
-                                    To support vulnerable women and girls in underserved communities by providing
-                                    essential
-                                    resources, education, and empowerment opportunities that enable them to thrive and
-                                    transform their communities.
+                                    To empower vulnerable women and girls in remote communities
+                                    through access to sustainable menstrual health products and education,
+                                    breaking taboos and ensuring dignity, health, and opportunity for every woman and girl.
+
                                 </p>
                             </div>
                         </div>
@@ -112,8 +108,9 @@ const About = () =>{
                                 <Eye className="h-12 w-12 text-[#6A0DAD] mx-auto mb-6"/>
                                 <h3 className="text-2xl font-bold text-[#232027] mb-4"> Our Vision</h3>
                                 <p className="text-[#637081] leading-relaxed">
-                                    A world where every woman and girl has equal access to opportunities, resources, and
-                                    the power to shape their own future and contribute meaningfully to their communities.
+                                    A world where no woman or girl is held back by her period
+                                    — where menstrual health is understood, embraced, and
+                                    supported with eco-friendly solutions and inclusive education, everywhere.
                                 </p>
                             </div>
                         </div>
