@@ -20,7 +20,7 @@ const SuccessStories = () => {
                     <div className="col-span-1 md:col-span-3 lg:col-span-4 relative group overflow-hidden rounded-lg">
                         <div className="w-full aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 relative">
                             <img
-                                src="2.avif"
+                                src="https://res.cloudinary.com/dlxil9dpo/image/upload/f_auto,q_auto/v1758014537/2_wbwtmj.avif"
                                 alt="Happy children"
                                 className="w-full h-full object-cover opacity-80"
                             />
@@ -41,7 +41,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-square">
                             <div className="w-full h-full bg-gradient-to-br from-[#6A0DAD] to-red-600 relative">
                                 <img
-                                    src="1.avif"
+                                    src="https://res.cloudinary.com/dlxil9dpo/image/upload/f_auto,q_auto/v1758014542/1_suxmxr.avif"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
@@ -60,7 +60,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-square">
                             <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 relative">
                                 <img
-                                    src="3.avif"
+                                    src="https://res.cloudinary.com/dlxil9dpo/image/upload/f_auto,q_auto/v1758014542/3_oy5jmv.avif"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
@@ -82,7 +82,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-[4/3] flex-1">
                             <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 relative">
                                 <img
-                                    src="4.avif"
+                                    src="https://res.cloudinary.com/dlxil9dpo/image/upload/f_auto,q_auto/v1758014549/4_qcb19a.avif"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />
@@ -101,7 +101,7 @@ const SuccessStories = () => {
                         <div className="relative group overflow-hidden rounded-lg aspect-[3/2]">
                             <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 relative">
                                 <img
-                                    src="5.avif"
+                                    src="https://res.cloudinary.com/dlxil9dpo/image/upload/f_auto,q_auto/v1758014550/5_wtvump.avif"
                                     alt="Smiling woman"
                                     className="w-full h-full object-cover opacity-90"
                                 />

@@ -1,6 +1,6 @@
 const Community = ()=>{
     return (
-        <div className="relative w-full py-20 md:min-h-[502px] overflow-hidden">
+        <div className="relative w-full py-20  overflow-hidden">
             {/* Background Image with Overlay */}
             <div className="absolute h-full inset-0 z-0 ">
                 <img

@@ -14,14 +14,18 @@ const HeroSection = () => {
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden mb-20">
             {/* Background Image with Overlay */}
-            <div className="absolute inset-0 bg-cover bg-center bg-no-repeat md:w-1/2 sm:w-full"
-                style={{backgroundImage: `url(${header_img})`}}
+            <div >
+                <img
+                    src="/5.avif"
+                    alt="Hero background"
+                    className="absolute inset-0 w-full h-full object-cover sm:object-center"
                 />
+            </div>
             {/* Responsive Gradient */}
-            <div className="absolute inset-0 bg-linear-to-l from-[#6A0DAD] from-15%% via-[#6A0DAD]"/>
+            <div className="absolute inset-0 bg-gradient-to-bl from-[#6A0DAD]/70 from-40%"/>
 
             {/* Content */}
-            <div className="relative z-10 max-w-7xl sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white ">
+            <div className="relative z-10 max-w-7xl sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white">
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance font-playfair">
                     Giving Her <span className="font-playball">E . V . E ,</span>
                 </h1>

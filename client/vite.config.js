@@ -8,5 +8,8 @@ export default defineConfig({
       tailwindcss(),
       react()
   ],
-  base: process.env.VITE_BASE_PATH ||"Giving_HER-EVE"
+    base:
+        process.env.NODE_ENV === "production"
+            ? (process.env.VITE_BASE_PATH || "/Giving_HER-EVE/")
+            : "/"
 })
