@@ -9,6 +9,7 @@ import bg_image from "../assets/Image.png"
 import {Plus, GraduationCap, Heart, ArrowRight} from "lucide-react";
 import Steps from "../components/Steps.jsx";
 import Team from "../components/Team.jsx";
+import Hero from "../components/Hero.jsx";
 
 const HeroSection = () => {
     return (
@@ -16,13 +17,13 @@ const HeroSection = () => {
             {/* Background Image with Overlay */}
             <div >
                 <img
-                    src="/5.avif"
+                    src="/hero.png"
                     alt="Hero background"
-                    className="absolute inset-0 w-full h-full object-cover sm:object-center"
+                    className="absolute inset-0 w-full h-full  object-cover md:object-center"
                 />
             </div>
             {/* Responsive Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-bl from-[#6A0DAD]/70 from-40%"/>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#6A0DAD]/70 from-40%"/>
 
             {/* Content */}
             <div className="relative z-10 max-w-7xl sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white">
