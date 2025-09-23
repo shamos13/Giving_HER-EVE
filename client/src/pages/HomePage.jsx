@@ -26,7 +26,7 @@ const HeroSection = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-[#6A0DAD]/70 from-40%"/>
 
             {/* Content */}
-            <div className="relative z-10 max-w-7xl sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white">
+            <div className="relative z-10 max-w-7xl px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white">
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance font-playfair">
                     Giving Her <span className="font-playball">E . V . E ,</span>
                 </h1>

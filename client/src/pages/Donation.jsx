@@ -308,7 +308,7 @@ export default function DonationForm() {
                         <div className="border border-0 text-center rounded-lg text-[#232027]">
                             <div className="p-8">
                                 <Heart className="h-12 w-12 text-[#6A0DAD] mx-auto mb-4"/>
-                                <h3 className="text-xl font-bold text-[#232027] mb-4"> Volunteer </h3>
+                                <h3 className="text-xl font-bold text-[#232027] mb-4"> Spread Awareness </h3>
                                 <p className="mb-6 text-[#808994]">
                                     Share our mission with your network and help us reach more supporters.
                                 </p>
@@ -323,7 +323,7 @@ export default function DonationForm() {
                         <div className="border border-0 text-center rounded-lg text-[#232027]">
                             <div className="p-8">
                                 <Package className="h-12 w-12 text-[#6A0DAD] mx-auto mb-4"/>
-                                <h3 className="text-xl font-bold text-[#232027] mb-4"> Volunteer </h3>
+                                <h3 className="text-xl font-bold text-[#232027] mb-4"> In-Kind Donations</h3>
                                 <p className="mb-6 text-[#808994]">
                                     Donate supplies, materials, or services that directly support our programs.
                                 </p>
