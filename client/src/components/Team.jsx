@@ -55,10 +55,10 @@ const Team = () => {
     const SocialIcon = ({ Icon, href = "#" }) => (
         <motion.a
             href={href}
-            className="w-8 h-8 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center transition-colors duration-200"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            className="w-8 h-8 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center transition-colors duration-150"
+            whileHover={{ scale: 1.05, rotate: 3 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
         >
             <Icon size={16} className="text-purple-600" />
         </motion.a>
@@ -66,22 +66,22 @@ const Team = () => {
 
     const TeamMemberCard = ({ member, index }) => (
         <motion.div 
-            className="bg-white rounded-xl border-2 border-purple-300 p-6 shadow-lg hover:shadow-xl hover:border-purple-400 transition-all duration-300 group"
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="bg-white rounded-xl border-2 border-purple-300 p-6 shadow-lg hover:shadow-xl hover:border-purple-400 transition-all duration-200 group"
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-50px" }}
             whileHover={{ 
-                y: -10, 
-                scale: 1.02,
-                transition: { duration: 0.3 }
+                y: -5, 
+                scale: 1.01,
+                transition: { duration: 0.2, ease: "easeOut" }
             }}
         >
             <div className="flex flex-col items-center text-center">
                 <motion.div 
                     className="w-24 h-24 md:w-32 md:h-32 mb-4 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                 >
                     <img
                         src={member.image}
@@ -96,9 +96,9 @@ const Team = () => {
 
                 <motion.h3 
                     className="text-lg font-semibold text-gray-800 mb-2"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 + index * 0.05, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
                     {member.name}
@@ -106,9 +106,9 @@ const Team = () => {
 
                 <motion.p 
                     className="text-gray-600 text-sm mb-4"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.15 + index * 0.05, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
                     {member.role}
@@ -116,9 +116,9 @@ const Team = () => {
 
                 <motion.div 
                     className="flex space-x-3"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                    transition={{ duration: 0.3, delay: 0.2 + index * 0.05, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
                     <SocialIcon Icon={Instagram} />
@@ -135,24 +135,24 @@ const Team = () => {
             {/* Header */}
             <motion.div 
                 className="text-center mb-12"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                viewport={{ once: true, margin: "-100px" }}
             >
                 <motion.h2 
                     className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
+                    transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
                     Meet Our{' '}
                     <motion.span 
                         className="relative"
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
+                        transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
                         viewport={{ once: true }}
                     >
                         Devoted
@@ -160,7 +160,7 @@ const Team = () => {
                             className="absolute bottom-1 left-0 w-full h-3 bg-yellow-300 -z-10"
                             initial={{ width: 0 }}
                             whileInView={{ width: "100%" }}
-                            transition={{ duration: 0.8, delay: 0.6 }}
+                            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                             viewport={{ once: true }}
                         ></motion.span>
                     </motion.span>
@@ -168,9 +168,9 @@ const Team = () => {
                 </motion.h2>
                 <motion.p 
                     className="text-gray-600 max-w-2xl mx-auto text-lg"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
+                    transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
                     Behind Giving Her E.V.E is a team of passionate individuals who believe in equality, voice, and empowerment.
@@ -181,10 +181,10 @@ const Team = () => {
             {/* Team Grid - Horizontally Scrollable Container */}
             <motion.div 
                 className="mb-12"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+                viewport={{ once: true, margin: "-50px" }}
             >
                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-gray-100 pb-4">
                     <div className="flex space-x-6 min-w-max px-2">

@@ -29,25 +29,25 @@ const HeroSection = () => {
             {/* Content */}
             <div className="relative z-10 max-w-7xl px-4 sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white">
                 <motion.h1 
-                    initial={{ opacity: 0, y: 50 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
                     className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 text-balance font-playfair"
                 >
                     Giving Her <span className="font-playball">E . V . E ,</span>
                 </motion.h1>
                 <motion.h2 
-                    initial={{ opacity: 0, y: 50 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.2 }}
+                    transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
                     className="text-2xl sm:text-3xl lg:text-7xl font-playball mt-2 md:mt-4"
                 >
                     Equality, Voice & Empowerment
                 </motion.h2>
                 <motion.p 
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.4 }}
+                    transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                     className="mt-4 md:mt-6 max-w-xl text-gray-300 text-sm sm:text-base lg:text-lg px-4"
                 >
                     Every helping hand brings heartfelt change, creating ripples of hope and compassion.
@@ -55,9 +55,9 @@ const HeroSection = () => {
                     a brighter, more compassionate world.
                 </motion.p>
                 <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.6 }}
+                    transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                     className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4"
                 >
                     <button
@@ -73,9 +73,9 @@ const HeroSection = () => {
             {/* Right Side Icon */}
             <motion.div 
                 className="absolute -top-2 -right-1 z-10 hidden lg:block"
-                initial={{ opacity: 0, scale: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.8 }}
+                transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
             >
                 <img
                     src="hand_heart.png"
@@ -85,9 +85,9 @@ const HeroSection = () => {
             </motion.div>
             <motion.div 
                 className="absolute -bottom-6 right-10 z-10 hidden lg:block"
-                initial={{ opacity: 0, scale: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 1 }}
+                transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
             >
                 <img
                     src="donation_bottle.png"
