@@ -8,6 +8,9 @@ export default function DonationForm() {
     const [selectedAmount, setSelectedAmount] = useState(100);
     const [customAmount, setCustomAmount] = useState('');
     const [selectedPayment, setSelectedPayment] = useState('mpesa');
+    const [donorName, setDonorName] = useState('');
+    const [donorEmail, setDonorEmail] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     const presetAmounts = [25, 50, 100, 250, 500, 1000];
     const monthlyAmounts = [30, 60, 120, 300];
@@ -83,6 +86,33 @@ export default function DonationForm() {
             details: 'Account details provided after selection'
         }
     ];
+
+    const handleDonate = async () => {
+        try {
+            setSubmitting(true);
+            const amount = Number(selectedAmount || customAmount || 0);
+            if (!amount || amount <= 0) return;
+
+            await fetch('http://localhost:8080/api/donations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount,
+                    currency: 'USD',
+                    donorName: donorName || undefined,
+                    donorEmail: donorEmail || undefined,
+                    source: selectedPayment,
+                })
+            });
+            alert('Thank you! Your donation was recorded (sandbox).');
+            setCustomAmount('');
+        } catch (e) {
+            console.error(e);
+            alert('Failed to record donation. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
@@ -228,6 +258,29 @@ export default function DonationForm() {
                 )}
             </div>
 
+            {/* Donor Info */}
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Your Name (optional)</label>
+                    <input
+                        value={donorName}
+                        onChange={(e)=>setDonorName(e.target.value)}
+                        placeholder="Jane Doe"
+                        className="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email (optional)</label>
+                    <input
+                        type="email"
+                        value={donorEmail}
+                        onChange={(e)=>setDonorEmail(e.target.value)}
+                        placeholder="jane@example.com"
+                        className="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                </div>
+            </div>
+
             {/* Payment Methods */}
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Payment Method</h2>
@@ -270,10 +323,11 @@ export default function DonationForm() {
 
             {/* Donation Button */}
             <button
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-4 px-8 rounded-lg text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
-                disabled={selectedAmount === 0}
+                onClick={handleDonate}
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-4 px-8 rounded-lg text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={selectedAmount === 0 || submitting}
             >
-                {activeTab === 'monthly' ? `Start Monthly Giving ${selectedAmount}` : `Donate ${selectedAmount}`} →
+                {submitting ? 'Processing...' : (activeTab === 'monthly' ? `Start Monthly Giving ${selectedAmount}` : `Donate ${selectedAmount}`)} →
             </button>
 
             {/* Security Notice */}
