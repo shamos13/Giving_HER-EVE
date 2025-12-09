@@ -6,35 +6,87 @@ import header_img from "../assets/header_img.png"
 import Community from "../components/Community.jsx";
 import bg_image from "../assets/Image.png"
 
-import {Plus, GraduationCap, Heart, ArrowRight} from "lucide-react";
+import {Plus, GraduationCap, Heart, ArrowLeft, ArrowRight} from "lucide-react";
 import Steps from "../components/Steps.jsx";
 import Team from "../components/Team.jsx";
 import Hero from "../components/Hero.jsx";
 import { motion } from "framer-motion";
+import {useEffect, useState} from "react";
+
+const HERO_SLIDES = [
+    {
+        image: "/hero.png",
+        headline: "Giving Her",
+        highlight: "E . V . E ,",
+        subline: "Equality, Voice & Empowerment",
+        blurb: "Every helping hand brings heartfelt change, creating ripples of hope and compassion. Each act of kindness lifts lives, inspiring others and uniting us in a shared journey toward a brighter, more compassionate world."
+    },
+    {
+        image: "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/1_suxmxr.avif",
+        headline: "Hands Together",
+        highlight: "Hearts Aligned",
+        subline: "Community Powered Giving",
+        blurb: "Your generosity fuels programs that nourish, protect, and uplift women every day."
+    },
+    {
+        image: "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014537/2_wbwtmj.avif",
+        headline: "Small Gifts",
+        highlight: "Big Impact",
+        subline: "Hope In Every Contribution",
+        blurb: "Each act of kindness lifts lives and inspires others to join a brighter, more compassionate world."
+    },
+    {
+        image: "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/3_oy5jmv.avif",
+        headline: "Empower Her",
+        highlight: "Future",
+        subline: "Support Education & Health",
+        blurb: "Provide school kits, healthcare, and safe spaces so girls can thrive and lead."
+    }
+];
 
 const HeroSection = () => {
+    const [current, setCurrent] = useState(0);
+
+    useEffect(() => {
+        const id = setInterval(() => {
+            setCurrent((prev) => (prev + 1) % HERO_SLIDES.length);
+        }, 15000);
+        return () => clearInterval(id);
+    }, []);
+
+    const goTo = (index) => setCurrent((index + HERO_SLIDES.length) % HERO_SLIDES.length);
+
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden mb-12 md:mb-20">
-            {/* Background Image with Overlay */}
-            <div >
-                <img
-                    src="/hero.png"
-                    alt="Hero background"
-                    className="absolute inset-0 w-full h-full  object-cover md:object-center"
-                />
+            {/* Background Carousel */}
+            <div className="absolute inset-0">
+                {HERO_SLIDES.map((slide, index) => (
+                    <motion.div
+                        key={slide.image}
+                        className="absolute inset-0"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: current === index ? 1 : 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        style={{
+                            backgroundImage: `url(${slide.image})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center"
+                        }}
+                    />
+                ))}
             </div>
             {/* Responsive Gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#6A0DAD]/70 from-40%"/>
 
             {/* Content */}
-            <div className="relative z-10 max-w-7xl px-4 sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center  text-center text-white">
+            <div className="relative z-10 max-w-7xl px-4 sm:px-6 lg:px-8 mx-auto flex flex-col items-center justify-center text-center text-white">
                 <motion.h1 
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 text-balance font-playfair"
                 >
-                    Giving Her <span className="font-playball">E . V . E ,</span>
+                    {HERO_SLIDES[current].headline} <span className="font-playball">{HERO_SLIDES[current].highlight}</span>
                 </motion.h1>
                 <motion.h2 
                     initial={{ opacity: 0, y: 30 }}
@@ -42,7 +94,7 @@ const HeroSection = () => {
                     transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
                     className="text-2xl sm:text-3xl lg:text-7xl font-playball mt-2 md:mt-4"
                 >
-                    Equality, Voice & Empowerment
+                    {HERO_SLIDES[current].subline}
                 </motion.h2>
                 <motion.p 
                     initial={{ opacity: 0, y: 20 }}
@@ -50,9 +102,7 @@ const HeroSection = () => {
                     transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                     className="mt-4 md:mt-6 max-w-xl text-gray-300 text-sm sm:text-base lg:text-lg px-4"
                 >
-                    Every helping hand brings heartfelt change, creating ripples of hope and compassion.
-                    Each act of kindness lifts lives, inspiring others and uniting us in a shared journey toward
-                    a brighter, more compassionate world.
+                    {HERO_SLIDES[current].blurb}
                 </motion.p>
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -68,6 +118,34 @@ const HeroSection = () => {
                         Learn More
                     </button>
                 </motion.div>
+            </div>
+
+            {/* Carousel Navigation */}
+            <div className="absolute bottom-12 md:bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
+                <button
+                    aria-label="Previous slide"
+                    className="p-2 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm transition"
+                    onClick={() => goTo(current - 1)}
+                >
+                    <ArrowLeft className="h-5 w-5"/>
+                </button>
+                <div className="flex gap-2">
+                    {HERO_SLIDES.map((_, index) => (
+                        <button
+                            key={index}
+                            aria-label={`Go to slide ${index + 1}`}
+                            className={`h-2.5 rounded-full transition-all duration-300 ${current === index ? "w-8 bg-white" : "w-2.5 bg-white/50"}`}
+                            onClick={() => goTo(index)}
+                        />
+                    ))}
+                </div>
+                <button
+                    aria-label="Next slide"
+                    className="p-2 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm transition"
+                    onClick={() => goTo(current + 1)}
+                >
+                    <ArrowRight className="h-5 w-5"/>
+                </button>
             </div>
 
             {/* Right Side Icon */}

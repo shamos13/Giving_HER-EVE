@@ -1,0 +1,209 @@
+Frontend Implementation Instructions for Backend Dashboard
+1. Technology Stack
+
+Framework: React.js (Functional components + Hooks)
+
+Styling: Tailwind CSS (matches the main site)
+
+State Management: Context API or Redux (for global dashboard state)
+
+Routing: React Router v6 (/dashboard, /dashboard/users, /dashboard/programs, etc.)
+
+Forms & Validation: react-hook-form + yup
+
+Tables & Lists: react-table or Tailwind-styled tables
+
+Charts & Graphs: react-chartjs-2 or recharts
+
+2. Dashboard Layout
+
+Sidebar Navigation: Vertical left sidebar with modules:
+
+Dashboard Home (overview metrics)
+
+Users & Volunteers
+
+Donations
+
+Programs & Services
+
+Content Management (Home, About, Team, Success Stories)
+
+Inquiries & Contact Messages
+
+Analytics & Reports
+
+Settings / Admin
+
+Top Bar / Header:
+
+Admin name + profile picture
+
+Notifications (new messages, donations)
+
+Quick actions (Add program, Add user)
+
+Main Content Area: Shows pages corresponding to sidebar navigation.
+
+Footer: Optional, simple copyright info.
+
+3. Page & Component Breakdown
+A. Dashboard Home
+
+Components:
+
+Metric Cards: Total Users, Donations, Volunteers, Programs, Messages
+
+Recent Donations Table
+
+Latest Contact Messages
+
+Graph: Donation trends (line chart) or program reach (bar chart)
+
+UI Tips:
+
+Use Tailwind cards with shadows and hover effects.
+
+Responsive grid layout (grid-cols-1 md:grid-cols-2 lg:grid-cols-3).
+
+B. Users & Volunteers Page
+
+Components:
+
+Searchable table of users (name, email, phone, role, status)
+
+Filter by role (Admin, Volunteer, Donor)
+
+Action buttons per row: Edit, Deactivate, View Details
+
+Modal forms for editing user info
+
+UI Tips:
+
+Table with sticky headers
+
+Paginate long lists
+
+Highlight active/verified users
+
+C. Donations Page
+
+Components:
+
+Table listing donations: donor, amount, date, category, status
+
+Filters: date range, program type, status
+
+Modal or side panel for donation details
+
+UI Tips:
+
+Use badges to indicate status (completed, pending)
+
+Chart showing donation trends by month
+
+D. Programs & Services Page
+
+Components:
+
+Grid or table of programs/services
+
+Each program card shows: name, category, beneficiaries, start/end dates
+
+Edit button → opens modal with full program details (description, images, milestones)
+
+Add Program button → opens form
+
+UI Tips:
+
+Use Tailwind cards with images
+
+Drag & drop optional for reordering programs
+
+E. Content Management
+
+Components:
+
+Page sections: Home, About, Success Stories, Team
+
+Each section: editable fields (text, images, icons)
+
+Preview button to view changes before publishing
+
+Update button → sends content to backend
+
+UI Tips:
+
+Rich text editors (like react-quill) for content
+
+File uploader for images/icons
+
+Accordion layout for multiple sections
+
+F. Contact Messages & Inquiries
+
+Components:
+
+Table: Name, Email, Phone, Inquiry Type, Message Preview, Date, Status
+
+Filter by inquiry type or status
+
+Open message modal to read full message and mark as resolved
+
+UI Tips:
+
+Use colored tags for inquiry type (General, Volunteer, Donation, Partnership)
+
+Inline action buttons for “Resolve”, “Reply”, “Assign”
+
+G. Analytics & Reports
+
+Components:
+
+Charts: Donations over time, Program reach, Volunteer growth
+
+Metric cards with key insights
+
+Export button for reports (PDF/Excel)
+
+UI Tips:
+
+Line charts for trends
+
+Pie charts for category breakdown
+
+Keep charts responsive (responsive: true in chart options)
+
+4. Global Features
+
+Notifications: Show alerts for new messages, donations, or volunteer applications.
+
+Modals: For forms, editing content, confirming actions (delete, deactivate).
+
+Forms & Validation: All inputs should have error handling.
+
+Responsive Design: Sidebar collapses on small screens, content stacks vertically.
+
+Reusable Components:
+
+Cards
+
+Buttons
+
+Modals
+
+Tables with sorting/filtering
+
+Form fields (Input, Select, Textarea)
+
+6. UI/UX Design Notes
+
+Keep the dashboard clean and consistent with the main site’s color scheme (#6A0DAD, #F036DC, yellow accents).
+
+Use shadow and hover effects for interactive elements.
+
+Ensure accessibility: proper color contrast, keyboard navigation.
+
+Include loading states for tables and charts.
+
+Use pagination and search for large data sets.
