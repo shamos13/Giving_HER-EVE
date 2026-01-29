@@ -1,14 +1,53 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CalendarClock, Download, HandHeart, Search } from "lucide-react"
+import { fetchDonations, downloadDonationReport, type DonationDto } from "../../services/api"
 
 function DonationsPage(): JSX.Element {
   const [statusFilter, setStatusFilter] = useState<DonationStatusFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState<DonationCategoryFilter>("all")
   const [query, setQuery] = useState("")
+  const [rows, setRows] = useState<DonationRow[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchDonations()
+        if (cancelled) return
+        const mapped: DonationRow[] = data.map((d: DonationDto) => ({
+          id: String(d.id),
+          reference: `GH-${d.id.toString().padStart(6, "0")}`,
+          donor: d.donorName ?? "Anonymous donor",
+          email: d.donorEmail ?? "",
+          amount: Number(d.amount ?? 0),
+          category: "Education",
+          date: new Date(d.createdAt).toLocaleDateString(),
+          status: "Completed",
+        }))
+        setRows(mapped)
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load donations")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const filteredDonations = useMemo(
     () =>
-      donationsData.filter(donation => {
+      rows.filter(donation => {
         const matchesStatus = statusFilter === "all" || donation.status === statusFilter
         const matchesCategory = categoryFilter === "all" || donation.category === categoryFilter
         const matchesQuery =
@@ -18,7 +57,7 @@ function DonationsPage(): JSX.Element {
 
         return matchesStatus && matchesCategory && matchesQuery
       }),
-    [statusFilter, categoryFilter, query],
+    [rows, statusFilter, categoryFilter, query],
   )
 
   return (
@@ -27,9 +66,21 @@ function DonationsPage(): JSX.Element {
         <div>
           <p className="text-sm font-semibold text-slate-500">Donations</p>
           <p className="text-lg font-bold text-slate-900">Track gifts and receipts</p>
+          {loading && <p className="mt-1 text-xs text-slate-500">Loading latest donations...</p>}
+          {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
         </div>
         <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+          <button
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            onClick={async () => {
+              try {
+                await downloadDonationReport("xlsx")
+              } catch (e) {
+                // eslint-disable-next-line no-alert
+                alert(e instanceof Error ? e.message : "Failed to export report")
+              }
+            }}
+          >
             <Download size={16} />
             Export report
           </button>
@@ -99,9 +150,15 @@ function DonationsPage(): JSX.Element {
                 </td>
                 <td className="px-4 py-3 text-slate-700">{donation.date}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    donation.status === "Completed" ? "bg-green-100 text-green-700" : donation.status === "Pending" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
-                  }`}>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      donation.status === "Completed"
+                        ? "bg-green-100 text-green-700"
+                        : donation.status === "Pending"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-rose-100 text-rose-700"
+                    }`}
+                  >
                     {donation.status}
                   </span>
                 </td>
@@ -117,6 +174,13 @@ function DonationsPage(): JSX.Element {
                 </td>
               </tr>
             ))}
+            {!loading && filteredDonations.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
+                  No donations found for the selected filters.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -1,4 +1,5 @@
-import { ArrowDownRight, ArrowUpRight, Clock3, MessageSquare, Shield } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ArrowDownRight, ArrowUpRight, Clock3 } from "lucide-react"
 import {
   CartesianGrid,
   Line,
@@ -8,12 +9,52 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { fetchDonationAnalytics, fetchDonationBySource, type DonationAnalyticsResponse, type DonationSourceSlice } from "../../services/api"
 
 function DashboardHome(): JSX.Element {
+  const [donationTrend, setDonationTrend] = useState<DonationTrendPoint[]>(donationTrendData)
+  const [sourceSlices, setSourceSlices] = useState<DonationSourceSlice[]>([])
+  const [summary, setSummary] = useState<{ totalAmount: number; totalCount: number } | null>(null)
+
+  useEffect(() => {
+    const end = new Date()
+    const start = new Date()
+    start.setMonth(start.getMonth() - 5)
+
+    const startIso = start.toISOString()
+    const endIso = end.toISOString()
+
+    let cancelled = false
+    async function load() {
+      try {
+        const [analytics, bySource] = await Promise.all([
+          fetchDonationAnalytics({ start: startIso, end: endIso }),
+          fetchDonationBySource(),
+        ])
+        if (cancelled) return
+
+        const mappedTrend: DonationTrendPoint[] = analytics.daily.map(point => ({
+          month: new Date(point.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+          donations: Number(point.total ?? 0) / 1000,
+        }))
+        if (mappedTrend.length > 0) {
+          setDonationTrend(mappedTrend)
+        }
+        setSummary({ totalAmount: Number(analytics.totalAmount ?? 0), totalCount: analytics.totalCount ?? 0 })
+        setSourceSlices(bySource)
+      } catch {
+        // keep fallback mock data if live call fails
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metricCards.map(card => (
+      <section className="grid gap-4 md:grid-cols-3">
+        {metricCards.slice(0, 3).map(card => (
           <MetricCard key={card.title} card={card} />
         ))}
       </section>
@@ -22,14 +63,21 @@ function DashboardHome(): JSX.Element {
         <div className="lg:col-span-2 rounded-2xl bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-slate-500">Donation Trends</p>
+              <p className="text-sm font-semibold text-slate-500">Donations overview</p>
               <p className="text-xl font-bold text-slate-900">Last 6 months</p>
+              {summary && (
+                <p className="mt-1 text-xs text-slate-500">
+                  {summary.totalCount} gifts totaling ${summary.totalAmount.toLocaleString()}.
+                </p>
+              )}
             </div>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">+12.4% vs last period</span>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+              At‑a‑glance funding momentum
+            </span>
           </div>
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={donationTrendData} margin={{ left: -10, right: 10 }}>
+              <LineChart data={donationTrend} margin={{ left: -10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} tickFormatter={value => `$${value}k`} />
@@ -46,97 +94,56 @@ function DashboardHome(): JSX.Element {
 
         <div className="space-y-4">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-slate-500">Latest contact messages</p>
-            <div className="mt-3 space-y-3">
-              {latestMessages.map(message => (
-                <div key={message.id} className="flex items-start gap-3 rounded-xl border border-slate-100 p-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 text-white grid place-items-center font-semibold">
-                    {message.initials}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900">{message.name}</p>
-                    <p className="text-xs text-slate-500">{message.type}</p>
-                    <p className="mt-1 text-sm text-slate-700">{message.preview}</p>
-                  </div>
-                  <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${message.status === "New" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                    {message.status}
-                  </span>
-                </div>
-              ))}
+            <p className="text-sm font-semibold text-slate-500">Today&apos;s focus</p>
+            <p className="mt-1 text-sm text-slate-700">
+              Use this space each morning to quickly review how donations are trending and which commitments are coming
+              up. Follow up on any large gifts or upcoming events first.
+            </p>
+            <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              Tip: Keep this page as your calm command center. Detailed lists live in the Donations, Programs, and
+              Messages sections.
             </div>
-            <button className="mt-3 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Open messages</button>
-          </div>
-
-          <div className="rounded-2xl bg-gradient-to-r from-purple-600 to-pink-500 p-4 text-white shadow-md">
-            <div className="flex items-center gap-3">
-              <Shield size={18} />
-              <p className="text-sm font-semibold uppercase tracking-wide text-white/80">Operational tips</p>
-            </div>
-            <p className="mt-2 text-lg font-bold">Keep volunteers engaged</p>
-            <p className="mt-1 text-sm text-white/85">Send weekly updates, celebrate milestones, and respond to new inquiries within 24 hours.</p>
-            <button className="mt-3 rounded-lg bg-white/10 px-3 py-2 text-sm font-semibold hover:bg-white/20">View playbook</button>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="md:col-span-1 xl:col-span-2 rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-500">Recent donations</p>
-            <button className="text-xs font-semibold text-purple-600 hover:text-purple-500">View all</button>
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl bg-white p-4 shadow-sm">
+          <p className="text-sm font-semibold text-slate-500">Recent donations (sample)</p>
+          <div className="mt-3 space-y-3">
+            {recentDonations.map(item => (
+              <div key={item.id} className="flex items-center justify-between rounded-xl border border-slate-100 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-slate-100 text-sm font-semibold text-slate-700 grid place-items-center">
+                    {item.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{item.donor}</p>
+                    <p className="text-xs text-slate-500">{item.email}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-900">${item.amount.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">{item.date}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="mt-3 overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-2 font-semibold">Donor</th>
-                  <th className="px-3 py-2 font-semibold">Amount</th>
-                  <th className="px-3 py-2 font-semibold">Category</th>
-                  <th className="px-3 py-2 font-semibold">Date</th>
-                  <th className="px-3 py-2 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentDonations.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-slate-100 text-sm font-semibold text-slate-700 grid place-items-center">
-                          {item.initials}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900">{item.donor}</p>
-                          <p className="text-xs text-slate-500">{item.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 font-semibold text-slate-900">${item.amount.toLocaleString()}</td>
-                    <td className="px-3 py-3">
-                      <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">{item.category}</span>
-                    </td>
-                    <td className="px-3 py-3 text-slate-700">{item.date}</td>
-                    <td className="px-3 py-3">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        item.status === "Completed" ? "bg-green-100 text-green-700" : item.status === "Pending" ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-700"
-                      }`}>
-                        {item.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <button className="mt-3 w-full rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+            Go to full donations view
+          </button>
         </div>
 
         <div className="rounded-2xl bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">Volunteer pulse</p>
+          <p className="text-sm font-semibold text-slate-500">Operations pulse</p>
           <div className="mt-3 space-y-3">
             {volunteerUpdates.map(update => (
               <div key={update.label} className="rounded-xl border border-slate-100 p-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">{update.label}</p>
-                  <span className={`text-xs font-semibold ${update.delta.includes("+") ? "text-green-600" : "text-amber-600"}`}>{update.delta}</span>
+                  <span className={`text-xs font-semibold ${update.delta.includes("+") ? "text-green-600" : "text-amber-600"}`}>
+                    {update.delta}
+                  </span>
                 </div>
                 <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
                   <div className="h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-500" style={{ width: update.progress }} />
@@ -148,9 +155,9 @@ function DashboardHome(): JSX.Element {
           <div className="mt-4 rounded-xl bg-slate-900 px-4 py-3 text-white">
             <div className="flex items-center gap-2">
               <Clock3 size={16} />
-              <p className="text-sm font-semibold">Upcoming: Volunteer briefing</p>
+              <p className="text-sm font-semibold">Next key session</p>
             </div>
-            <p className="text-xs text-white/80">Thursday, 4:00 PM • Zoom</p>
+            <p className="text-xs text-white/80">Use this space to highlight the most important upcoming briefing or event.</p>
           </div>
         </div>
       </section>
