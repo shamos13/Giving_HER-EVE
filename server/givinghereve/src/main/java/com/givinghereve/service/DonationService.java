@@ -6,9 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class DonationService {
@@ -25,12 +23,18 @@ public class DonationService {
         return donationRepository.save(donation);
     }
 
+    public List<Donation> findAll() {
+        return donationRepository.findAll();
+    }
+
     public Map<String, Object> analytics(OffsetDateTime start, OffsetDateTime end) {
         Map<String, Object> result = new HashMap<>();
         BigDecimal total = donationRepository.sumAllAmounts();
         long count = donationRepository.count();
         BigDecimal periodTotal = donationRepository.sumBetween(start, end);
-        List<Object[]> daily = donationRepository.dailyTotals(start, end);
+        List<Object[]> daily = (start != null && end != null)
+                ? donationRepository.dailyTotals(start, end)
+                : Collections.emptyList();
 
         result.put("totalAmount", total);
         result.put("totalCount", count);
@@ -43,6 +47,18 @@ public class DonationService {
             m.put("total", row[1]);
             return m;
         }).toList());
+        return result;
+    }
+
+    public List<Map<String, Object>> totalsBySource() {
+        List<Object[]> rows = donationRepository.totalsBySource();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("source", row[0]);
+            m.put("total", row[1]);
+            result.add(m);
+        }
         return result;
     }
 }

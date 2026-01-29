@@ -19,6 +19,9 @@ public interface DonationRepository extends JpaRepository<Donation, Long> {
 
     @Query("select function('date', d.createdAt) as day, coalesce(sum(d.amount),0) as total from Donation d where d.createdAt between :start and :end group by function('date', d.createdAt) order by day")
     List<Object[]> dailyTotals(@Param("start") OffsetDateTime start, @Param("end") OffsetDateTime end);
+
+    @Query("select coalesce(d.source,'Unknown') as source, coalesce(sum(d.amount),0) as total from Donation d group by coalesce(d.source,'Unknown')")
+    List<Object[]> totalsBySource();
 }
 
 
