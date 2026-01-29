@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { BadgeCheck, Filter, Search, ShieldCheck, UserCheck, UserRoundX } from "lucide-react"
+import { BadgeCheck, Search, UserRoundX } from "lucide-react"
 
 function UsersPage(): JSX.Element {
   const [roleFilter, setRoleFilter] = useState<UserRoleFilter>("all")
@@ -23,20 +23,13 @@ function UsersPage(): JSX.Element {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-slate-500">Users & Volunteers</p>
-          <p className="text-lg font-bold text-slate-900">Manage people and access</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
-            <Filter size={16} />
-            Filters
-          </button>
-          <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
-            Add user
-          </button>
-        </div>
+      <div>
+        <p className="text-sm font-semibold text-slate-500">Users & Volunteers</p>
+        <p className="text-lg font-bold text-slate-900">Quick view of key people</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Keep this page light: search or filter to find someone, then move to a detailed profile view in a future
+          iteration.
+        </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
@@ -142,74 +135,13 @@ function UsersPage(): JSX.Element {
         </table>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-green-600" />
-            <p className="text-sm font-semibold text-slate-900">Verification status</p>
-          </div>
-          <p className="mt-1 text-xs text-slate-500">Background checks and ID verification progress</p>
-          <div className="mt-3 space-y-2">
-            <ProgressRow label="Completed checks" value="76%" barWidth="76%" />
-            <ProgressRow label="Pending approvals" value="18%" barWidth="18%" tone="amber" />
-            <ProgressRow label="Flagged profiles" value="6%" barWidth="6%" tone="rose" />
-          </div>
-        </div>
-
-        <div className="lg:col-span-2 rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <UserCheck size={16} className="text-purple-600" />
-            <p className="text-sm font-semibold text-slate-900">Engagement tips</p>
-          </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <TipCard title="Welcome flow" body="Send personal welcome email within 24 hours of signup. Add them to the volunteer briefing calendar." />
-            <TipCard title="Activation" body="Assign first task within 7 days. Pair new volunteers with mentors to speed onboarding." />
-            <TipCard title="Retention" body="Celebrate milestones, highlight impact stories, and rotate responsibilities to reduce burnout." />
-            <TipCard title="Safety" body="Keep liability waivers updated and log emergency contacts for every shift." />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ProgressRow({ label, value, barWidth, tone = "purple" }: ProgressRowProps): JSX.Element {
-  const toneClass = tone === "purple" ? "from-purple-600 to-pink-500" : tone === "amber" ? "from-amber-500 to-yellow-400" : "from-rose-500 to-orange-400"
-  return (
-    <div>
-      <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
-        <p>{label}</p>
-        <p>{value}</p>
-      </div>
-      <div className="mt-1 h-2 w-full rounded-full bg-slate-100">
-        <div className={`h-2 rounded-full bg-gradient-to-r ${toneClass}`} style={{ width: barWidth }} />
-      </div>
-    </div>
-  )
-}
-
-function TipCard({ title, body }: TipCardProps): JSX.Element {
-  return (
-    <div className="rounded-xl border border-slate-100 p-3">
-      <p className="text-sm font-semibold text-slate-900">{title}</p>
-      <p className="mt-1 text-sm text-slate-600">{body}</p>
+      {/* Intentionally keeping this page light to avoid overwhelming admins.
+          Future iterations can add a detailed user profile view instead of extra dashboard cards. */}
     </div>
   )
 }
 
 export default UsersPage
-
-interface ProgressRowProps {
-  label: string
-  value: string
-  barWidth: string
-  tone?: "purple" | "amber" | "rose"
-}
-
-interface TipCardProps {
-  title: string
-  body: string
-}
 
 interface UserRow {
   id: string
