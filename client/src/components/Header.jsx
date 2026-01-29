@@ -13,7 +13,9 @@ const Header = () => {
         {name: "Events", path: "/#"},
         {name: "Donation", path: "/donate"},
         {name: "About", path: "/about"},
-        {name: "Contact", path: "/contact"}
+        {name: "Contact", path: "/contact"},
+        // Temporary quick access link to the admin dashboard until routes are protected
+        {name: "Dashboard", path: "/dashboard"}
     ];
 
     const isActive = (path) => location.pathname === path;
