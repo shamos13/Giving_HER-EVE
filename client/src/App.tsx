@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router"
+import type { JSX } from "react"
 import HomePage from "./pages/HomePage.jsx"
 import Donation from "./pages/Donation.jsx"
 import About from "./pages/About.jsx"

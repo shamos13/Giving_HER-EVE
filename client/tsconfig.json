@@ -10,7 +10,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["vite/client", "react/experimental"]
+    "types": ["vite/client", "react", "react/experimental"]
   },
   "include": ["src", "vite.config.*", "eslint.config.*"],
   "references": []
