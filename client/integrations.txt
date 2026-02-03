@@ -1,0 +1,104 @@
+Search
+
+"Search by name, email, phone, reference..."
+Real-time with 500ms debounce
+
+Display
+
+Desktop: Table (Date, Donor, Amount, Campaign, Payment, Status, Actions)
+
+Sort by Date/Amount
+Click row → Expand with full details + actions
+
+
+Mobile: Cards, tap to expand
+Pagination: 25/50/100 per page
+
+Donation Detail Modal: ID, status, amount, donor info, payment ref (copyable), receipt download, send thank you
+
+9. SETTINGS
+Sections (sidebar nav or tabs)
+Organization
+
+Logo upload (150x150px)
+Basic info: Name, tagline, website, email, phone, address
+Social media links
+About (rich text, 2000 char)
+"Save Changes" button
+
+Payment Methods
+M-Pesa:
+
+Enable toggle
+Config fields: Shortcode, keys, passkey, till/paybill, environment (Sandbox/Production)
+"Test Connection" button
+Min/max donation amounts
+
+PayPal:
+
+Enable toggle
+Client ID, Secret, Environment, Currency
+"Test Connection" button
+
+Bank Transfer:
+
+Enable toggle
+Bank name, account details, instructions
+
+Priority: Drag-drop to reorder
+Users
+
+Table: Name, Email, Role, Status, Last Active
+Roles: Super Admin, Admin, Viewer
+"Add Admin User" → Modal (name, email, role, send invitation)
+Actions: Edit, Deactivate, Delete
+Edit modal: Change name/role, reset password button
+
+Notifications
+Admin Alerts (checkboxes):
+
+New donation, Daily summary, Weekly report, Monthly report, Campaign milestones, Failed payments
+
+Donor Auto-emails (toggles):
+
+Thank you, Receipt, Campaign updates, Completion notification
+
+Email Templates: Link to editor (subject, body with variables {donor_name}, etc., preview)
+Security
+
+Change Password: Current + New (with strength meter) + Confirm
+2FA: Enable/Disable toggle, QR code setup, backup codes
+Login Activity: Recent sessions table, revoke button
+Session: Auto-logout duration, "Log out all sessions" button
+
+
+10. RESPONSIVE RULES
+Mobile Adaptations
+
+Sidebars → Overlays or bottom nav
+Multi-column grids → Single column
+Tables → Cards
+24px padding → 16px
+Modals → Full-screen
+Min touch target: 44x44px
+
+Loading/Empty States
+
+Skeleton screens (500ms min display)
+Empty states: Illustration + message + CTA
+Errors: Toast (minor), inline (forms), modal (critical)
+Success: Green toast with checkmark (3s)
+
+Accessibility
+
+Keyboard navigation, visible focus (blue outline)
+ARIA labels on icons
+4.5:1 contrast ratio
+Min 14px text (16px mobile)
+
+Charts
+
+Sparklines: Mini area charts (40px height)
+Progress bars: 8-12px height, color-coded, animated fill
+Line charts: Tooltips on hover, goal line, responsive
+Pie/bar charts: Brand colors, interactive

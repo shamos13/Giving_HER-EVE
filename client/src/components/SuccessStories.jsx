@@ -1,8 +1,9 @@
 import React from "react";
+import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
 
 // Reusable StoryCard component
-const StoryCard = React.memo(({ imgSrc, title, subtitle, aspect, flexGrow }) => (
+const StoryCard = React.memo(({ imgSrc, title, subtitle, aspect, flexGrow, campaignId }) => (
     <div className={`relative group overflow-hidden rounded-lg ${aspect} ${flexGrow}`}>
         {/* Blurred placeholder */}
         <img
@@ -27,10 +28,13 @@ const StoryCard = React.memo(({ imgSrc, title, subtitle, aspect, flexGrow }) => 
         <div className="absolute bottom-4 left-4 text-white">
             <h3 className="text-xl md:text-2xl font-bold mb-1">{title}</h3>
             <p className="text-gray-200 text-sm mb-2">{subtitle}</p>
-            <button className="flex items-center text-yellow-400 hover:text-yellow-300 transition-colors text-sm font-medium">
-                Know more
+            <Link
+                to={campaignId ? `/campaigns/${campaignId}` : "/campaigns"}
+                className="inline-flex items-center text-yellow-400 hover:text-yellow-300 transition-colors text-sm font-medium"
+            >
+                View details
                 <ArrowRight className="ml-1 w-4 h-4" />
-            </button>
+            </Link>
         </div>
     </div>
 ));
@@ -43,6 +47,7 @@ const SuccessStories = () => {
             title: "Empowering Smiles",
             subtitle: "A story of hope and education",
             aspect: "aspect-[3/4]",
+            campaignId: "2",
         },
         {
             imgSrc:
@@ -50,6 +55,7 @@ const SuccessStories = () => {
             title: "New Beginnings",
             subtitle: "Her story, her strength",
             aspect: "aspect-square",
+            campaignId: "3",
         },
         {
             imgSrc:
@@ -57,6 +63,7 @@ const SuccessStories = () => {
             title: "Breaking Barriers",
             subtitle: "Together we rise",
             aspect: "aspect-square",
+            campaignId: "2",
         },
         {
             imgSrc:
@@ -64,7 +71,8 @@ const SuccessStories = () => {
             title: "Education for All",
             subtitle: "Dreams taking flight",
             aspect: "aspect-[4/3]",
-            flexGrow: "flex-1"
+            flexGrow: "flex-1",
+            campaignId: "3",
         },
         {
             imgSrc:
@@ -72,7 +80,7 @@ const SuccessStories = () => {
             title: "Courage and Community",
             subtitle: "From despair to determination",
             aspect: "aspect-[3/2]",
-
+            campaignId: "1",
         },
     ];
 
