@@ -4,6 +4,7 @@ import Footer from "../components/Footer.jsx";
 import Header from "../components/Header.jsx";
 
 export default function DonationForm() {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
     const [activeTab, setActiveTab] = useState('one-time');
     const [selectedAmount, setSelectedAmount] = useState(100);
     const [customAmount, setCustomAmount] = useState('');
@@ -93,7 +94,7 @@ export default function DonationForm() {
             const amount = Number(selectedAmount || customAmount || 0);
             if (!amount || amount <= 0) return;
 
-            await fetch('http://localhost:8080/api/donations', {
+            await fetch(`${API_BASE_URL}/api/donations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
