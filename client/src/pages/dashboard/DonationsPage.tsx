@@ -13,13 +13,23 @@ import {
   Info,
   X,
 } from "lucide-react"
-import { fetchDonations, downloadDonationReport, type DonationDto } from "../../services/api"
+import {
+  fetchDonations,
+  downloadDonationReport,
+  fetchDonationCommitments,
+  fetchDonationStatusBreakdown,
+  type DonationDto,
+  type DonationCommitment,
+  type DonationStatusBreakdown,
+} from "../../services/api"
 
 function DonationsPage(): JSX.Element {
   const [statusFilter, setStatusFilter] = useState<DonationStatusFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState<DonationCategoryFilter>("all")
   const [query, setQuery] = useState("")
   const [rows, setRows] = useState<DonationRow[]>([])
+  const [statusBreakdown, setStatusBreakdown] = useState<DonationStatusBreakdown[]>([])
+  const [commitments, setCommitments] = useState<DonationCommitment[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [debouncedQuery, setDebouncedQuery] = useState("")
@@ -36,19 +46,25 @@ function DonationsPage(): JSX.Element {
       setLoading(true)
       setError(null)
       try {
-        const data = await fetchDonations()
+        const [donationRes, breakdownRes, commitmentsRes] = await Promise.all([
+          fetchDonations(),
+          fetchDonationStatusBreakdown(),
+          fetchDonationCommitments(),
+        ])
         if (cancelled) return
-        const mapped: DonationRow[] = data.map((d: DonationDto) => ({
+        const mapped: DonationRow[] = donationRes.map((d: DonationDto) => ({
           id: String(d.id),
           reference: `GH-${d.id.toString().padStart(6, "0")}`,
           donor: d.donorName ?? "Anonymous donor",
           email: d.donorEmail ?? "",
           amount: Number(d.amount ?? 0),
-          category: "Education",
+          category: d.category ?? "General",
           date: new Date(d.createdAt).toLocaleDateString(),
-          status: "Completed",
+          status: d.status ?? "Completed",
         }))
         setRows(mapped)
+        setStatusBreakdown(breakdownRes)
+        setCommitments(commitmentsRes)
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Failed to load donations")
@@ -114,6 +130,16 @@ function DonationsPage(): JSX.Element {
     () => sortedDonations.slice((currentPage - 1) * pageSize, currentPage * pageSize),
     [sortedDonations, currentPage, pageSize],
   )
+
+  const categoryOptions = useMemo(() => {
+    const values = Array.from(new Set(rows.map(row => row.category))).filter(Boolean)
+    return values.length > 0 ? values : ["General"]
+  }, [rows])
+
+  const statusOptions = useMemo(() => {
+    const values = Array.from(new Set(rows.map(row => row.status))).filter(Boolean)
+    return values.length > 0 ? values : ["Completed", "Pending", "Failed"]
+  }, [rows])
 
   function toggleSort(key: DonationSortKey) {
     if (sortBy === key) {
@@ -182,9 +208,9 @@ function DonationsPage(): JSX.Element {
           onChange={event => setStatusFilter(event.target.value as DonationStatusFilter)}
         >
           <option value="all">All status</option>
-          <option value="Completed">Completed</option>
-          <option value="Pending">Pending</option>
-          <option value="Failed">Failed</option>
+          {statusOptions.map(status => (
+            <option key={status} value={status}>{status}</option>
+          ))}
         </select>
         <select
           className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
@@ -192,10 +218,9 @@ function DonationsPage(): JSX.Element {
           onChange={event => setCategoryFilter(event.target.value as DonationCategoryFilter)}
         >
           <option value="all">All categories</option>
-          <option value="Education">Education</option>
-          <option value="Healthcare">Healthcare</option>
-          <option value="Shelter">Shelter</option>
-          <option value="Food">Food</option>
+          {categoryOptions.map(category => (
+            <option key={category} value={category}>{category}</option>
+          ))}
         </select>
       </div>
 
@@ -459,9 +484,12 @@ function DonationsPage(): JSX.Element {
             <p className="text-sm font-semibold text-slate-900">Status breakdown</p>
           </div>
           <div className="mt-3 space-y-2">
-            <StatusRow label="Completed" value="68%" tone="green" />
-            <StatusRow label="Pending" value="22%" tone="amber" />
-            <StatusRow label="Failed" value="10%" tone="rose" />
+            {statusBreakdown.map(item => (
+              <StatusRow key={item.label} label={item.label} value={item.value} tone={item.tone} />
+            ))}
+            {!loading && statusBreakdown.length === 0 && (
+              <p className="text-xs text-slate-500">No status data available.</p>
+            )}
           </div>
         </div>
         <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -470,18 +498,17 @@ function DonationsPage(): JSX.Element {
             <p className="text-sm font-semibold text-slate-900">Next commitments</p>
           </div>
           <div className="mt-3 space-y-2 text-sm text-slate-700">
-            <p className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span>Corporate matching</span>
-              <span className="text-xs font-semibold text-slate-500">Dec 10</span>
-            </p>
-            <p className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span>Foundation grant</span>
-              <span className="text-xs font-semibold text-slate-500">Dec 15</span>
-            </p>
-            <p className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span>Year-end appeal</span>
-              <span className="text-xs font-semibold text-slate-500">Dec 22</span>
-            </p>
+            {commitments.map(item => (
+              <p key={item.label} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <span>{item.label}</span>
+                <span className="text-xs font-semibold text-slate-500">
+                  {new Date(item.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                </span>
+              </p>
+            ))}
+            {!loading && commitments.length === 0 && (
+              <p className="text-xs text-slate-500">No upcoming commitments.</p>
+            )}
           </div>
         </div>
         <div className="rounded-2xl bg-gradient-to-r from-purple-600 to-pink-500 p-4 text-white shadow-md">
@@ -598,10 +625,10 @@ function StatusRow({ label, value, tone }: StatusRowProps): JSX.Element {
     <div>
       <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
         <p>{label}</p>
-        <p>{value}</p>
+        <p>{value}%</p>
       </div>
       <div className="mt-1 h-2 w-full rounded-full bg-slate-100">
-        <div className={`h-2 rounded-full bg-gradient-to-r ${toneClass}`} style={{ width: value }} />
+        <div className={`h-2 rounded-full bg-gradient-to-r ${toneClass}`} style={{ width: `${value}%` }} />
       </div>
     </div>
   )
@@ -611,8 +638,8 @@ export default DonationsPage
 
 interface StatusRowProps {
   label: string
-  value: string
-  tone: "green" | "amber" | "rose"
+  value: number
+  tone: "green" | "amber" | "rose" | "blue"
 }
 
 interface DonationRow {
@@ -621,9 +648,9 @@ interface DonationRow {
   donor: string
   email: string
   amount: number
-  category: "Education" | "Healthcare" | "Shelter" | "Food"
+  category: string
   date: string
-  status: "Completed" | "Pending" | "Failed"
+  status: string
 }
 
 type DonationStatusFilter = "all" | DonationRow["status"]
@@ -631,12 +658,4 @@ type DonationCategoryFilter = "all" | DonationRow["category"]
 type DonationSortKey = "date" | "amount"
 type SortDirection = "asc" | "desc"
 type PageSize = 25 | 50 | 100
-
-const donationsData: DonationRow[] = [
-  { id: "d1", reference: "GH-2024-8401", donor: "Nora Benson", email: "nora@kindmail.com", amount: 1200, category: "Education", date: "Dec 3", status: "Completed" },
-  { id: "d2", reference: "GH-2024-8402", donor: "Ayodele James", email: "ayo@impact.org", amount: 450, category: "Food", date: "Dec 2", status: "Pending" },
-  { id: "d3", reference: "GH-2024-8403", donor: "Zara Yemi", email: "zara@aid.io", amount: 980, category: "Healthcare", date: "Dec 1", status: "Completed" },
-  { id: "d4", reference: "GH-2024-8404", donor: "Ibrahim Musa", email: "ibrahim@care.ng", amount: 300, category: "Shelter", date: "Nov 30", status: "Failed" },
-  { id: "d5", reference: "GH-2024-8405", donor: "Tara Efe", email: "tara@friends.com", amount: 150, category: "Food", date: "Nov 29", status: "Completed" },
-]
 
