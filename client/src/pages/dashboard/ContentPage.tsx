@@ -1,8 +1,74 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Eye, FileText, Save, Upload } from "lucide-react"
+import { fetchContentSections, updateContentSection, type ContentSectionDto } from "../../services/api"
 
 function ContentPage(): JSX.Element {
-  const [activeSection, setActiveSection] = useState("Home")
+  const [sections, setSections] = useState<ContentSectionDto[]>([])
+  const [activeSectionId, setActiveSectionId] = useState<string>("")
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchContentSections()
+        if (cancelled) return
+        setSections(data)
+        if (data.length > 0) {
+          setActiveSectionId(prev => (prev ? prev : data[0].id))
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load content")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const activeSection = sections.find(section => section.id === activeSectionId)
+
+  function updateField(sectionId: string, fieldId: string, value: string) {
+    setSections(prev =>
+      prev.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              fields: section.fields.map(field =>
+                field.id === fieldId ? { ...field, value } : field,
+              ),
+            }
+          : section,
+      ),
+    )
+  }
+
+  async function saveSection(section: ContentSectionDto, status?: string) {
+    setSaving(true)
+    setError(null)
+    try {
+      const updated = await updateContentSection(section.id, {
+        fields: section.fields,
+        status: status ?? section.status,
+      })
+      setSections(prev => prev.map(item => (item.id === updated.id ? updated : item)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save section")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -10,6 +76,8 @@ function ContentPage(): JSX.Element {
         <div>
           <p className="text-sm font-semibold text-slate-500">Content Management</p>
           <p className="text-lg font-bold text-slate-900">Edit and preview site sections</p>
+          {loading && <p className="mt-1 text-xs text-slate-500">Loading content sections...</p>}
+          {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
@@ -27,13 +95,13 @@ function ContentPage(): JSX.Element {
           <p className="text-sm font-semibold text-slate-900">Sections</p>
           <p className="text-xs text-slate-500">Choose which page to update</p>
           <div className="mt-3 space-y-2">
-            {contentSections.map(section => (
+            {sections.map(section => (
               <button
-                key={section.name}
+                key={section.id}
                 className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold ${
-                  activeSection === section.name ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  activeSectionId === section.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                 }`}
-                onClick={() => setActiveSection(section.name)}
+                onClick={() => setActiveSectionId(section.id)}
               >
                 <span>{section.name}</span>
                 <FileText size={14} />
@@ -43,52 +111,60 @@ function ContentPage(): JSX.Element {
         </aside>
 
         <div className="lg:col-span-2 space-y-4">
-          {contentSections
-            .filter(section => section.name === activeSection)
-            .map(section => (
-              <section key={section.name} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{section.name}</p>
-                    <p className="text-xs text-slate-500">{section.description}</p>
+          {activeSection && (
+            <section key={activeSection.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{activeSection.name}</p>
+                  <p className="text-xs text-slate-500">{activeSection.description}</p>
+                </div>
+                <button className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800">
+                  <Eye size={14} />
+                  Preview
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {activeSection.fields.map(field => (
+                  <div key={field.id} className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700">{field.label}</label>
+                    {field.type === "textarea" ? (
+                      <textarea
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                        rows={field.rows ?? 3}
+                        value={field.value}
+                        onChange={event => updateField(activeSection.id, field.id, event.target.value)}
+                      />
+                    ) : (
+                      <input
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                        value={field.value}
+                        onChange={event => updateField(activeSection.id, field.id, event.target.value)}
+                      />
+                    )}
                   </div>
-                  <button className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800">
-                    <Eye size={14} />
-                    Preview
-                  </button>
-                </div>
+                ))}
+              </div>
 
-                <div className="mt-4 space-y-3">
-                  {section.fields.map(field => (
-                    <div key={field.label} className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-700">{field.label}</label>
-                      {field.type === "textarea" ? (
-                        <textarea
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                          rows={field.rows ?? 3}
-                          defaultValue={field.value}
-                        />
-                      ) : (
-                        <input
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                          defaultValue={field.value}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 flex items-center gap-2">
-                  <button className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50">
-                    <Save size={14} />
-                    Save draft
-                  </button>
-                  <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
-                    Update section
-                  </button>
-                </div>
-              </section>
-            ))}
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+                  onClick={() => saveSection(activeSection, "Draft")}
+                  disabled={saving}
+                >
+                  <Save size={14} />
+                  Save draft
+                </button>
+                <button
+                  className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md"
+                  onClick={() => saveSection(activeSection, "Published")}
+                  disabled={saving}
+                >
+                  Update section
+                </button>
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </div>
@@ -96,56 +172,4 @@ function ContentPage(): JSX.Element {
 }
 
 export default ContentPage
-
-interface ContentField {
-  label: string
-  value: string
-  type: "text" | "textarea"
-  rows?: number
-}
-
-interface ContentSection {
-  name: "Home" | "About" | "Success Stories" | "Team"
-  description: string
-  fields: ContentField[]
-}
-
-const contentSections: ContentSection[] = [
-  {
-    name: "Home",
-    description: "Hero headline, subtext, and primary CTA text",
-    fields: [
-      { label: "Hero headline", value: "Empowering every voice to rise above violence.", type: "text" },
-      { label: "Hero supporting text", value: "We connect survivors, communities, and partners to safety, resources, and hope.", type: "textarea", rows: 3 },
-      { label: "Primary CTA label", value: "Support our mission", type: "text" },
-    ],
-  },
-  {
-    name: "About",
-    description: "Story, mission, and impact metrics",
-    fields: [
-      { label: "Story intro", value: "Giving Her E.v.E is a community-powered movement providing shelter, healthcare, and education.", type: "textarea", rows: 4 },
-      { label: "Mission statement", value: "Ensure every woman feels safe, supported, and seen.", type: "text" },
-      { label: "Impact highlight", value: "Reached 12,000+ women with emergency care and advocacy.", type: "text" },
-    ],
-  },
-  {
-    name: "Success Stories",
-    description: "Quotes and featured journeys",
-    fields: [
-      { label: "Headline", value: "Stories of courage and transformation", type: "text" },
-      { label: "Feature summary", value: "Weekly spotlights on women who rebuilt their lives through our programs.", type: "textarea", rows: 3 },
-      { label: "CTA label", value: "Read more stories", type: "text" },
-    ],
-  },
-  {
-    name: "Team",
-    description: "Leadership, advisors, and volunteers",
-    fields: [
-      { label: "Intro", value: "We are volunteers, advocates, and professionals committed to safe communities.", type: "textarea", rows: 3 },
-      { label: "Highlight", value: "Local teams across 12 cities with legal, health, and counseling expertise.", type: "text" },
-      { label: "CTA label", value: "Meet our team", type: "text" },
-    ],
-  },
-]
 

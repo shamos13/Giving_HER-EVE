@@ -11,11 +11,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { fetchDonationAnalytics, downloadDonationReport, type DonationAnalyticsResponse } from "../../services/api"
+import { fetchDonationAnalytics, downloadDonationReport, fetchAnalyticsOverview } from "../../services/api"
 
 function AnalyticsPage(): JSX.Element {
-  const [donationData, setDonationData] = useState<DonationPerformance[]>(donationPerformance)
+  const [donationData, setDonationData] = useState<DonationPerformance[]>([])
   const [summary, setSummary] = useState<{ totalAmount: number; totalCount: number } | null>(null)
+  const [programReach, setProgramReach] = useState<ProgramReach[]>([])
+  const [volunteerGrowth, setVolunteerGrowth] = useState<VolunteerGrowthPoint[]>([])
+  const [channelMix, setChannelMix] = useState<ChannelSlice[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,15 +35,21 @@ function AnalyticsPage(): JSX.Element {
       setLoading(true)
       setError(null)
       try {
-        const res: DonationAnalyticsResponse = await fetchDonationAnalytics({ start: startIso, end: endIso })
+        const [donationRes, analyticsRes] = await Promise.all([
+          fetchDonationAnalytics({ start: startIso, end: endIso }),
+          fetchAnalyticsOverview(),
+        ])
         if (cancelled) return
         setDonationData(
-          res.daily.map(point => ({
+          donationRes.daily.map(point => ({
             month: new Date(point.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
             amount: Number(point.total ?? 0) / 1000,
           })),
         )
-        setSummary({ totalAmount: Number(res.totalAmount ?? 0), totalCount: res.totalCount ?? 0 })
+        setSummary({ totalAmount: Number(donationRes.totalAmount ?? 0), totalCount: donationRes.totalCount ?? 0 })
+        setProgramReach(analyticsRes.programReach ?? [])
+        setVolunteerGrowth(analyticsRes.volunteerGrowth ?? [])
+        setChannelMix(analyticsRes.channelMix ?? [])
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Failed to load analytics")
@@ -68,7 +77,7 @@ function AnalyticsPage(): JSX.Element {
             <span className="font-semibold text-slate-900">${summary.totalAmount.toLocaleString()}</span>.
           </p>
         )}
-        {loading && <p className="mt-1 text-xs text-slate-500">Refreshing analytics from live data…</p>}
+        {loading && <p className="mt-1 text-xs text-slate-500">Refreshing analytics from live data...</p>}
         {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
       </div>
 
@@ -163,17 +172,20 @@ function AnalyticsPage(): JSX.Element {
               <div key={channel.label} className="rounded-xl border border-slate-100 p-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">{channel.label}</p>
-                  <p className="text-xs font-semibold text-slate-500">{channel.value}</p>
+                  <p className="text-xs font-semibold text-slate-500">{channel.value}%</p>
                 </div>
                 <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
                   <div
                     className="h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-500"
-                    style={{ width: channel.value }}
+                    style={{ width: `${channel.value}%` }}
                   />
                 </div>
                 <p className="mt-1 text-xs text-slate-500">{channel.caption}</p>
               </div>
             ))}
+            {!loading && channelMix.length === 0 && (
+              <p className="text-xs text-slate-500">No channel data available yet.</p>
+            )}
           </div>
         </div>
         <div className="rounded-2xl bg-gradient-to-r from-purple-600 to-pink-500 p-4 text-white shadow-md">
@@ -236,39 +248,6 @@ interface VolunteerGrowthPoint {
 
 interface ChannelSlice {
   label: string
-  value: string
+  value: number
   caption: string
 }
-
-const donationPerformance: DonationPerformance[] = [
-  { month: "Jul", amount: 42 },
-  { month: "Aug", amount: 45 },
-  { month: "Sep", amount: 48 },
-  { month: "Oct", amount: 53 },
-  { month: "Nov", amount: 51 },
-  { month: "Dec", amount: 57 },
-]
-
-const programReach: ProgramReach[] = [
-  { program: "Education", women: 420, families: 130 },
-  { program: "Shelter", women: 360, families: 210 },
-  { program: "Healthcare", women: 280, families: 160 },
-  { program: "Food", women: 520, families: 240 },
-]
-
-const volunteerGrowth: VolunteerGrowthPoint[] = [
-  { month: "Jul", count: 780 },
-  { month: "Aug", count: 820 },
-  { month: "Sep", count: 860 },
-  { month: "Oct", count: 910 },
-  { month: "Nov", count: 950 },
-  { month: "Dec", count: 1020 },
-]
-
-const channelMix: ChannelSlice[] = [
-  { label: "Website", value: "46%", caption: "Inbound via forms and newsletter" },
-  { label: "Partnerships", value: "28%", caption: "NGO and corporate partners" },
-  { label: "Events", value: "18%", caption: "Workshops and community drives" },
-  { label: "Referrals", value: "8%", caption: "Alumni and advocates" },
-]
-

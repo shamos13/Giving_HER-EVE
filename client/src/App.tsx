@@ -6,6 +6,8 @@ import About from "./pages/About.jsx"
 import Contact from "./pages/Contact.jsx"
 import Campaigns from "./pages/Campaigns.jsx"
 import CampaignDetail from "./pages/CampaignDetail.jsx"
+import Impact from "./pages/Impact.jsx"
+import StoryDetail from "./pages/StoryDetail.jsx"
 import ScrollToTop from "./components/ScrollToTop.jsx"
 import DashboardLayout from "./pages/dashboard/DashboardLayout"
 import DashboardHome from "./pages/dashboard/DashboardHome"
@@ -27,6 +29,8 @@ function App(): JSX.Element {
         <Route path="/donate" element={<Donation />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/campaigns" element={<Campaigns />} />
+        <Route path="/impact" element={<Impact />} />
+        <Route path="/impact/:id" element={<StoryDetail />} />
         <Route path="/campaigns/:id" element={<CampaignDetail />} />
         <Route path="/dashboard/*" element={<DashboardLayout />}>
           <Route index element={<DashboardHome />} />
@@ -44,4 +48,3 @@ function App(): JSX.Element {
 }
 
 export default App
-
