@@ -1,0 +1,799 @@
+{
+  "campaigns": [
+    {
+      "id": "1",
+      "slug": "sanitary-product-drive",
+      "label": "Urgent",
+      "title": "Sanitary Product Drive",
+      "shortDescription": "Help us provide dignity kits so no girl has to miss school because of her period.",
+      "description": "Periods should never be a reason a girl falls behind. Yet in many communities, lack of access to menstrual products keeps girls out of school for days every month. This campaign funds dignity kits that include sanitary pads, soap, and educational materials, delivered directly to girls and women who need them most.",
+      "image": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014550/5_wtvump.avif",
+      "raised": 12450,
+      "goal": 20000,
+      "location": "East Africa",
+      "category": "Health & Dignity",
+      "status": "Active",
+      "startDate": "2025-08-01",
+      "endDate": null
+    },
+    {
+      "id": "2",
+      "slug": "school-support-kits",
+      "label": "",
+      "title": "School Support Kits",
+      "shortDescription": "Provide uniforms, backpacks, and supplies so girls can step confidently into the classroom.",
+      "description": "A simple kit can be the difference between dropping out and dreaming bigger. Your support equips girls with uniforms, backpacks, notebooks, and essentials that many families cannot afford. Together we remove barriers so every girl can learn with confidence.",
+      "image": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/3_oy5jmv.avif",
+      "raised": 5200,
+      "goal": 15000,
+      "location": "Rural schools",
+      "category": "Education",
+      "status": "Active",
+      "startDate": "2025-09-15",
+      "endDate": null
+    },
+    {
+      "id": "3",
+      "slug": "womens-vocational-training",
+      "label": "",
+      "title": "Women's Vocational Training",
+      "shortDescription": "Empower mothers with job-ready skills so they can build lasting stability for their families.",
+      "description": "This campaign funds training in tailoring, agriculture, and small business skills for women who are ready to transform their families' futures. From equipment to mentoring, your gift helps create pathways to sustainable income and generational change.",
+      "image": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014549/4_qcb19a.avif",
+      "raised": 23800,
+      "goal": 30000,
+      "location": "Community hubs",
+      "category": "Economic Empowerment",
+      "status": "Active",
+      "startDate": "2025-07-01",
+      "endDate": null
+    }
+  ],
+  "stories": [
+    {
+      "id": "s1",
+      "title": "Empowering Smiles",
+      "excerpt": "Education support that kept students learning",
+      "content": "Our education team partnered with local schools to provide scholarships, learning kits, and mentoring that restored attendance and confidence for students at risk of dropping out.",
+      "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014537/2_wbwtmj.avif",
+      "status": "Published",
+      "campaignId": "2"
+    },
+    {
+      "id": "s2",
+      "title": "New Beginnings",
+      "excerpt": "Safe shelter and counseling restored stability",
+      "content": "Our protection partners coordinated emergency shelter, counseling, and case management that helped a family transition from crisis to stability.",
+      "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/1_suxmxr.avif",
+      "status": "Published",
+      "campaignId": "3"
+    },
+    {
+      "id": "s3",
+      "title": "Breaking Barriers",
+      "excerpt": "Community-led learning and mentorship support",
+      "content": "Community partners delivered essential supplies and mentorship sessions that kept students and caregivers connected to education and wellbeing services.",
+      "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/3_oy5jmv.avif",
+      "status": "Published",
+      "campaignId": "2"
+    },
+    {
+      "id": "s4",
+      "title": "Education for All",
+      "excerpt": "Scholarships that expanded access to learning",
+      "content": "A donor-funded scholarship program provided tuition, uniforms, and leadership workshops that helped students complete their studies and mentor others.",
+      "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014549/4_qcb19a.avif",
+      "status": "Published",
+      "campaignId": "3"
+    },
+    {
+      "id": "s5",
+      "title": "Courage and Community",
+      "excerpt": "Emergency relief coordinated with local leaders",
+      "content": "Our emergency response teams delivered food, supplies, and shelter materials while coordinating recovery support with local partners.",
+      "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014550/5_wtvump.avif",
+      "status": "Published",
+      "campaignId": "1"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "t1",
+      "quote": "The team's dedication to quality and excellence truly exceeded my expectations. From the initial consultation to the final deliverable, every detail was carefully managed, and they took the time to understand my unique needs and vision.",
+      "name": "Patience Chacha",
+      "role": "CEO of GivingHerE.V.E",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "status": "Published"
+    },
+    {
+      "id": "t2",
+      "quote": "Giving Her E.V.E helped our community access safe spaces and education resources we never thought possible.",
+      "name": "Amara Keita",
+      "role": "Community Partner",
+      "avatar": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "status": "Published"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "f1",
+      "question": "How are donations used?",
+      "answer": "Most donations go directly to programs that support women and girls through education, health, and safety initiatives.",
+      "status": "Published"
+    },
+    {
+      "id": "f2",
+      "question": "Can I volunteer?",
+      "answer": "Yes. We welcome volunteers for community outreach, mentorship, and event support.",
+      "status": "Published"
+    },
+    {
+      "id": "f3",
+      "question": "Do you provide receipts?",
+      "answer": "Yes, we issue receipts for all donations within 24 hours of confirmation.",
+      "status": "Published"
+    }
+  ],
+  "donations": [
+    {
+      "id": 8401,
+      "amount": 1200,
+      "currency": "USD",
+      "donorName": "Nora Benson",
+      "donorEmail": "nora@kindmail.com",
+      "source": "Website",
+      "campaignId": "2",
+      "category": "Education",
+      "status": "Completed",
+      "createdAt": "2025-12-03T09:24:00.000Z"
+    },
+    {
+      "id": 8402,
+      "amount": 450,
+      "currency": "USD",
+      "donorName": "Ayodele James",
+      "donorEmail": "ayo@impact.org",
+      "source": "Partnerships",
+      "campaignId": "1",
+      "category": "Food",
+      "status": "Pending",
+      "createdAt": "2025-12-02T16:10:00.000Z"
+    },
+    {
+      "id": 8403,
+      "amount": 980,
+      "currency": "USD",
+      "donorName": "Zara Yemi",
+      "donorEmail": "zara@aid.io",
+      "source": "Events",
+      "campaignId": "3",
+      "category": "Healthcare",
+      "status": "Completed",
+      "createdAt": "2025-12-01T14:45:00.000Z"
+    },
+    {
+      "id": 8404,
+      "amount": 300,
+      "currency": "USD",
+      "donorName": "Ibrahim Musa",
+      "donorEmail": "ibrahim@care.ng",
+      "source": "Website",
+      "campaignId": "1",
+      "category": "Shelter",
+      "status": "Failed",
+      "createdAt": "2025-11-30T10:12:00.000Z"
+    },
+    {
+      "id": 8405,
+      "amount": 150,
+      "currency": "USD",
+      "donorName": "Tara Efe",
+      "donorEmail": "tara@friends.com",
+      "source": "Website",
+      "campaignId": "2",
+      "category": "Food",
+      "status": "Completed",
+      "createdAt": "2025-11-29T08:40:00.000Z"
+    },
+    
+    {
+      "id": 8406,
+      "amount": 500,
+      "currency": "USD",
+      "donorName": "Amara Keita",
+      "donorEmail": "amara@kindmail.com",
+      "source": "Partnerships",
+      "campaignId": "2",
+      "category": "Education",
+      "status": "Completed",
+      "createdAt": "2025-12-02T09:10:00.000Z"
+    },
+    {
+      "id": 8407,
+      "amount": 320,
+      "currency": "USD",
+      "donorName": "Daniel Ikor",
+      "donorEmail": "daniel@focus.org",
+      "source": "Website",
+      "campaignId": "3",
+      "category": "Healthcare",
+      "status": "Pending",
+      "createdAt": "2025-12-01T11:05:00.000Z"
+    },
+    {
+      "id": 8408,
+      "amount": 900,
+      "currency": "USD",
+      "donorName": "Lara Obeng",
+      "donorEmail": "lara@impact.io",
+      "source": "Events",
+      "campaignId": "1",
+      "category": "Shelter",
+      "status": "Completed",
+      "createdAt": "2025-11-30T15:30:00.000Z"
+    },
+    {
+      "id": 8409,
+      "amount": 150,
+      "currency": "USD",
+      "donorName": "Robin Ade",
+      "donorEmail": "robin@ade.com",
+      "source": "Website",
+      "campaignId": "1",
+      "category": "Food",
+      "status": "Completed",
+      "createdAt": "2025-11-30T17:20:00.000Z"
+    }
+  ],
+  "programs": [
+    {
+      "id": "p1",
+      "name": "STEM for Girls",
+      "category": "Education",
+      "description": "After-school coding and robotics clubs with mentors and laptops provided.",
+      "timeline": "Jan - Jun 2026",
+      "beneficiaries": "240 students",
+      "location": "Lagos, Abuja",
+      "progress": 72,
+      "status": "Active"
+    },
+    {
+      "id": "p2",
+      "name": "Safe Shelters",
+      "category": "Shelter",
+      "description": "Renovation of community shelters with safety, nutrition, and counseling support.",
+      "timeline": "Feb - Aug 2026",
+      "beneficiaries": "520 families",
+      "location": "Kano, Kaduna",
+      "progress": 54,
+      "status": "Active"
+    },
+    {
+      "id": "p3",
+      "name": "Maternal Health Clinics",
+      "category": "Healthcare",
+      "description": "Mobile clinics providing prenatal care, screenings, and health education.",
+      "timeline": "Mar - Nov 2026",
+      "beneficiaries": "1,100 mothers",
+      "location": "Cross River",
+      "progress": 38,
+      "status": "Planning"
+    },
+    {
+      "id": "p4",
+      "name": "Volunteer Accelerator",
+      "category": "Training",
+      "description": "Upskilling volunteers with safeguarding, communications, and leadership workshops.",
+      "timeline": "Quarterly",
+      "beneficiaries": "320 volunteers",
+      "location": "Hybrid",
+      "progress": 81,
+      "status": "Active"
+    },
+    {
+      "id": "p5",
+      "name": "Nutrition Drive",
+      "category": "Food",
+      "description": "Weekly meal packs, fresh produce, and nutrition guidance for families in need.",
+      "timeline": "All year",
+      "beneficiaries": "2,400 people",
+      "location": "Nationwide",
+      "progress": 65,
+      "status": "Active"
+    },
+    {
+      "id": "p6",
+      "name": "Digital Safety Labs",
+      "category": "Advocacy",
+      "description": "Campaigns and workshops on online safety, privacy, and rights for young women.",
+      "timeline": "May - Sep 2026",
+      "beneficiaries": "800 participants",
+      "location": "Online",
+      "progress": 44,
+      "status": "Paused"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "name": "Adaeze Chukwu",
+      "email": "ada@helper.com",
+      "type": "Volunteer",
+      "preview": "Available weekends, interested in the shelter program...",
+      "message": "Available weekends, interested in the shelter program. Please share next steps and any onboarding materials.",
+      "status": "New",
+      "createdAt": "2025-12-02T11:20:00.000Z"
+    },
+    {
+      "id": "m2",
+      "name": "Grace Daniels",
+      "email": "grace@foundation.org",
+      "type": "Donation",
+      "preview": "Please confirm our November wire receipt...",
+      "message": "Please confirm our November wire receipt and share the official acknowledgment letter.",
+      "status": "In progress",
+      "createdAt": "2025-12-01T09:05:00.000Z"
+    },
+    {
+      "id": "m3",
+      "name": "Leo Adebisi",
+      "email": "leo@partners.io",
+      "type": "Partnership",
+      "preview": "Can we co-host the January awareness event?",
+      "message": "Can we co-host the January awareness event? Happy to discuss logistics and promotion.",
+      "status": "Resolved",
+      "createdAt": "2025-12-01T08:30:00.000Z"
+    },
+    {
+      "id": "m4",
+      "name": "Sarah Bello",
+      "email": "sarah@community.ng",
+      "type": "General",
+      "preview": "Requesting brochures for our community center...",
+      "message": "Requesting brochures for our community center. Please advise how to receive printed materials.",
+      "status": "New",
+      "createdAt": "2025-11-30T15:15:00.000Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "u1",
+      "name": "Chidinma Abubakar",
+      "initials": "CA",
+      "role": "Admin",
+      "email": "chidinma@giving.org",
+      "phone": "+234 802 111 2222",
+      "status": "Active",
+      "joined": "Jan 12, 2024",
+      "verified": true
+    },
+    {
+      "id": "u2",
+      "name": "Victor Essien",
+      "initials": "VE",
+      "role": "Volunteer",
+      "email": "victor@helpers.com",
+      "phone": "+234 703 223 9988",
+      "status": "Active",
+      "joined": "Mar 28, 2024",
+      "verified": true
+    },
+    {
+      "id": "u3",
+      "name": "Halima Yusuf",
+      "initials": "HY",
+      "role": "Volunteer",
+      "email": "halima@impact.org",
+      "phone": "+234 809 114 8899",
+      "status": "Pending",
+      "joined": "Apr 4, 2024",
+      "verified": false
+    },
+    {
+      "id": "u4",
+      "name": "Tosin Adebayo",
+      "initials": "TA",
+      "role": "Donor",
+      "email": "tosin@kindmail.com",
+      "phone": "+234 701 333 9900",
+      "status": "Active",
+      "joined": "May 21, 2024",
+      "verified": true
+    },
+    {
+      "id": "u5",
+      "name": "Ngozi Owusu",
+      "initials": "NO",
+      "role": "Volunteer",
+      "email": "ngozi@care.ng",
+      "phone": "+234 802 884 7777",
+      "status": "Inactive",
+      "joined": "Nov 2, 2023",
+      "verified": false
+    }
+  ],
+  "contentSections": [
+    {
+      "id": "home",
+      "name": "Home",
+      "description": "Hero headline, subtext, and primary CTA text",
+      "status": "Draft",
+      "fields": [
+        {
+          "id": "hero_headline",
+          "label": "Hero headline",
+          "value": "Empowering every voice to rise above violence.",
+          "type": "text"
+        },
+        {
+          "id": "hero_supporting",
+          "label": "Hero supporting text",
+          "value": "We connect survivors, communities, and partners to safety, resources, and hope.",
+          "type": "textarea",
+          "rows": 3
+        },
+        {
+          "id": "hero_cta",
+          "label": "Primary CTA label",
+          "value": "Support our mission",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "about",
+      "name": "About",
+      "description": "Story, mission, and impact metrics",
+      "status": "Draft",
+      "fields": [
+        {
+          "id": "story_intro",
+          "label": "Story intro",
+          "value": "Giving Her E.V.E is a community-powered movement providing shelter, healthcare, and education.",
+          "type": "textarea",
+          "rows": 4
+        },
+        {
+          "id": "mission_statement",
+          "label": "Mission statement",
+          "value": "Ensure every woman feels safe, supported, and seen.",
+          "type": "text"
+        },
+        {
+          "id": "impact_highlight",
+          "label": "Impact highlight",
+          "value": "Reached 12,000+ women with emergency care and advocacy.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "success_stories",
+      "name": "Success Stories",
+      "description": "Quotes and featured journeys",
+      "status": "Draft",
+      "fields": [
+        {
+          "id": "stories_headline",
+          "label": "Headline",
+          "value": "Stories of courage and transformation",
+          "type": "text"
+        },
+        {
+          "id": "stories_summary",
+          "label": "Feature summary",
+          "value": "Weekly spotlights on women who rebuilt their lives through our programs.",
+          "type": "textarea",
+          "rows": 3
+        },
+        {
+          "id": "stories_cta",
+          "label": "CTA label",
+          "value": "Read more stories",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "name": "Team",
+      "description": "Leadership, advisors, and volunteers",
+      "status": "Draft",
+      "fields": [
+        {
+          "id": "team_intro",
+          "label": "Intro",
+          "value": "We are volunteers, advocates, and professionals committed to safe communities.",
+          "type": "textarea",
+          "rows": 3
+        },
+        {
+          "id": "team_highlight",
+          "label": "Highlight",
+          "value": "Local teams across 12 cities with legal, health, and counseling expertise.",
+          "type": "text"
+        },
+        {
+          "id": "team_cta",
+          "label": "CTA label",
+          "value": "Meet our team",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "organization": {
+      "name": "Giving Her E.V.E",
+      "tagline": "Empowering vulnerable women through support and advocacy.",
+      "website": "https://givinghereve.org",
+      "email": "hello@givinghereve.org",
+      "phone": "+254 700 000 000",
+      "address": "Nairobi, Kenya",
+      "facebook": "https://facebook.com/givinghereve",
+      "instagram": "https://instagram.com/givinghereve",
+      "xHandle": "https://x.com/givinghereve",
+      "about": "Giving Her E.V.E provides trauma-informed care, legal support, and economic empowerment for survivors of violence."
+    },
+    "payments": {
+      "mpesa": {
+        "enabled": true,
+        "shortcode": "123456",
+        "till": "987654",
+        "passkey": "**************",
+        "environment": "sandbox",
+        "min": "50",
+        "max": "500000"
+      },
+      "paypal": {
+        "enabled": true,
+        "clientId": "live_client_id_here",
+        "secret": "**************",
+        "environment": "sandbox",
+        "currency": "USD"
+      },
+      "bank": {
+        "enabled": false,
+        "name": "Community Bank",
+        "account": "0123456789",
+        "instructions": "Include your full name and phone number as the payment reference."
+      },
+      "priority": [
+        "M-Pesa",
+        "PayPal",
+        "Bank Transfer"
+      ]
+    },
+    "notifications": {
+      "adminAlerts": {
+        "newDonation": true,
+        "dailySummary": true,
+        "weeklyReport": true,
+        "monthlyReport": false,
+        "campaignMilestones": true,
+        "failedPayments": true
+      },
+      "donorEmails": {
+        "thankYou": true,
+        "receipt": true,
+        "campaignUpdates": false,
+        "completion": true
+      }
+    },
+    "security": {
+      "twoFactor": true,
+      "autoLogoutMinutes": 30,
+      "backupCodes": [
+        "4H9K-7M2Q-A8D3",
+        "2L7C-9V5P-Q1XZ",
+        "8R4N-3K6J-Z7YT"
+      ],
+      "recentSessions": [
+        "Today · Chrome · Nairobi, KE",
+        "Yesterday · Safari · Mombasa, KE"
+      ]
+    },
+    "adminUsers": [
+      {
+        "name": "Nora Benson",
+        "email": "nora@givinghereve.org",
+        "role": "Super Admin",
+        "status": "Active",
+        "lastActive": "Today · 09:24"
+      },
+      {
+        "name": "Ayodele James",
+        "email": "ayo@givinghereve.org",
+        "role": "Admin",
+        "status": "Active",
+        "lastActive": "Yesterday · 18:12"
+      },
+      {
+        "name": "Operations Viewer",
+        "email": "viewer@givinghereve.org",
+        "role": "Viewer",
+        "status": "Inactive",
+        "lastActive": "Last week"
+      }
+    ]
+  },
+  "dashboard": {
+    "focus": {
+      "title": "Today's focus",
+      "body": "Use this space each morning to quickly review how donations are trending and which commitments are coming up. Follow up on any large gifts or upcoming events first.",
+      "tip": "Tip: Keep this page as your calm command center. Detailed lists live in the Donations, Programs, and Messages sections."
+    },
+    "operationsPulse": {
+      "updates": [
+        {
+          "label": "Background checks",
+          "progress": 72,
+          "delta": "+6% this week",
+          "caption": "18 volunteers pending verification"
+        },
+        {
+          "label": "Shift coverage",
+          "progress": 64,
+          "delta": "-3% coverage gap",
+          "caption": "Add 6 volunteers to weekend shifts"
+        },
+        {
+          "label": "Training completion",
+          "progress": 81,
+          "delta": "+4% completion",
+          "caption": "Send reminder to new cohort"
+        }
+      ],
+      "nextSession": {
+        "title": "Next key session",
+        "body": "Use this space to highlight the most important upcoming briefing or event."
+      }
+    },
+    "donationCommitments": [
+      {
+        "label": "Corporate matching",
+        "date": "2025-12-10"
+      },
+      {
+        "label": "Foundation grant",
+        "date": "2025-12-15"
+      },
+      {
+        "label": "Year-end appeal",
+        "date": "2025-12-22"
+      }
+    ],
+    "messageSla": [
+      {
+        "label": "Volunteer inquiries",
+        "value": "2.1h avg",
+        "tone": "green",
+        "progress": 72
+      },
+      {
+        "label": "Donation receipts",
+        "value": "1.4h avg",
+        "tone": "amber",
+        "progress": 64
+      },
+      {
+        "label": "Partnership requests",
+        "value": "4.3h avg",
+        "tone": "blue",
+        "progress": 58
+      }
+    ],
+    "messageTips": [
+      "Auto-assign donation questions to finance admins for faster receipts.",
+      "Volunteer inquiries should include shift availability and preferred location.",
+      "Tag partnership leads with source (email, site form, referral) for follow-up.",
+      "Resolve messages with a final note and add knowledge base links when possible."
+    ],
+    "analytics": {
+      "programReach": [
+        {
+          "program": "Education",
+          "women": 420,
+          "families": 130
+        },
+        {
+          "program": "Shelter",
+          "women": 360,
+          "families": 210
+        },
+        {
+          "program": "Healthcare",
+          "women": 280,
+          "families": 160
+        },
+        {
+          "program": "Food",
+          "women": 520,
+          "families": 240
+        }
+      ],
+      "volunteerGrowth": [
+        {
+          "month": "Jul",
+          "count": 780
+        },
+        {
+          "month": "Aug",
+          "count": 820
+        },
+        {
+          "month": "Sep",
+          "count": 860
+        },
+        {
+          "month": "Oct",
+          "count": 910
+        },
+        {
+          "month": "Nov",
+          "count": 950
+        },
+        {
+          "month": "Dec",
+          "count": 1020
+        }
+      ],
+      "channelMix": [
+        {
+          "label": "Website",
+          "value": 46,
+          "caption": "Inbound via forms and newsletter"
+        },
+        {
+          "label": "Partnerships",
+          "value": 28,
+          "caption": "NGO and corporate partners"
+        },
+        {
+          "label": "Events",
+          "value": 18,
+          "caption": "Workshops and community drives"
+        },
+        {
+          "label": "Referrals",
+          "value": 8,
+          "caption": "Alumni and advocates"
+        }
+      ]
+    },
+    "metricMeta": [
+      {
+        "id": "totalUsers",
+        "title": "Total Users",
+        "delta": "+8.2% vs last month",
+        "caption": "Active across all programs",
+        "trend": "up",
+        "accent": "bg-gradient-to-br from-purple-600 to-pink-500 text-white"
+      },
+      {
+        "id": "donations",
+        "title": "Donations",
+        "delta": "+12.4% vs last period",
+        "caption": "Average gift $110",
+        "trend": "up",
+        "accent": "bg-gradient-to-br from-amber-500 to-yellow-400 text-white"
+      },
+      {
+        "id": "volunteers",
+        "title": "Volunteers",
+        "delta": "+4.1% new signups",
+        "caption": "Engaged weekly",
+        "trend": "up",
+        "accent": "bg-gradient-to-br from-slate-900 to-slate-700 text-white"
+      },
+      {
+        "id": "openMessages",
+        "title": "Open Messages",
+        "delta": "-6.3% response time",
+        "caption": "Average reply in 2.1h",
+        "trend": "down",
+        "accent": "bg-gradient-to-br from-blue-500 to-cyan-400 text-white"
+      }
+    ]
+  }
+}
