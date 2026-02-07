@@ -1,14 +1,43 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { BadgeCheck, Search, UserRoundX } from "lucide-react"
+import { fetchUsers, type UserDto } from "../../services/api"
 
 function UsersPage(): JSX.Element {
   const [roleFilter, setRoleFilter] = useState<UserRoleFilter>("all")
   const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("all")
   const [query, setQuery] = useState("")
+  const [users, setUsers] = useState<UserDto[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchUsers()
+        if (cancelled) return
+        setUsers(data)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load users")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const filteredUsers = useMemo(
     () =>
-      usersData.filter(user => {
+      users.filter(user => {
         const matchesRole = roleFilter === "all" || user.role === roleFilter
         const matchesStatus = statusFilter === "all" || user.status === statusFilter
         const matchesQuery =
@@ -18,7 +47,7 @@ function UsersPage(): JSX.Element {
 
         return matchesRole && matchesStatus && matchesQuery
       }),
-    [roleFilter, statusFilter, query],
+    [users, roleFilter, statusFilter, query],
   )
 
   return (
@@ -30,6 +59,8 @@ function UsersPage(): JSX.Element {
           Keep this page light: search or filter to find someone, then move to a detailed profile view in a future
           iteration.
         </p>
+        {loading && <p className="mt-1 text-xs text-slate-500">Loading users...</p>}
+        {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
@@ -131,6 +162,13 @@ function UsersPage(): JSX.Element {
                 </td>
               </tr>
             ))}
+            {!loading && filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
+                  No users found for the selected filters.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -147,22 +185,14 @@ interface UserRow {
   id: string
   name: string
   initials: string
-  role: "Admin" | "Volunteer" | "Donor"
+  role: "Admin" | "Volunteer" | "Donor" | string
   email: string
   phone: string
-  status: "Active" | "Pending" | "Inactive"
+  status: "Active" | "Pending" | "Inactive" | string
   joined: string
   verified: boolean
 }
 
 type UserRoleFilter = "all" | UserRow["role"]
 type UserStatusFilter = "all" | UserRow["status"]
-
-const usersData: UserRow[] = [
-  { id: "u1", name: "Chidinma Abubakar", initials: "CA", role: "Admin", email: "chidinma@giving.org", phone: "+234 802 111 2222", status: "Active", joined: "Jan 12, 2024", verified: true },
-  { id: "u2", name: "Victor Essien", initials: "VE", role: "Volunteer", email: "victor@helpers.com", phone: "+234 703 223 9988", status: "Active", joined: "Mar 28, 2024", verified: true },
-  { id: "u3", name: "Halima Yusuf", initials: "HY", role: "Volunteer", email: "halima@impact.org", phone: "+234 809 114 8899", status: "Pending", joined: "Apr 4, 2024", verified: false },
-  { id: "u4", name: "Tosin Adebayo", initials: "TA", role: "Donor", email: "tosin@kindmail.com", phone: "+234 701 333 9900", status: "Active", joined: "May 21, 2024", verified: true },
-  { id: "u5", name: "Ngozi Owusu", initials: "NO", role: "Volunteer", email: "ngozi@care.ng", phone: "+234 802 884 7777", status: "Inactive", joined: "Nov 2, 2023", verified: false },
-]
 
