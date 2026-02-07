@@ -1,73 +1,164 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ShieldCheck, Smartphone, UserCog, CreditCard, Banknote, Users, Bell, Lock, Globe } from "lucide-react"
+import { fetchSettings, updateSettingsSection, type SettingsDto } from "../../services/api"
+
+const defaultAdminAlerts = {
+  newDonation: false,
+  dailySummary: false,
+  weeklyReport: false,
+  monthlyReport: false,
+  campaignMilestones: false,
+  failedPayments: false,
+}
+
+const defaultDonorEmails = {
+  thankYou: false,
+  receipt: false,
+  campaignUpdates: false,
+  completion: false,
+}
 
 function SettingsPage(): JSX.Element {
   const [activeSection, setActiveSection] = useState<SettingsSection>("organization")
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Organization
-  const [orgName, setOrgName] = useState("Giving Her E.v.E")
-  const [tagline, setTagline] = useState("Empowering vulnerable women through support and advocacy.")
-  const [website, setWebsite] = useState("https://givinghereve.org")
-  const [orgEmail, setOrgEmail] = useState("hello@givinghereve.org")
-  const [orgPhone, setOrgPhone] = useState("+254 700 000 000")
-  const [address, setAddress] = useState("Nairobi, Kenya")
-  const [facebook, setFacebook] = useState("https://facebook.com/givinghereve")
-  const [instagram, setInstagram] = useState("https://instagram.com/givinghereve")
-  const [xHandle, setXHandle] = useState("https://x.com/givinghereve")
-  const [about, setAbout] = useState(
-    "Giving Her E.v.E provides trauma-informed care, legal support, and economic empowerment for survivors of violence.",
-  )
+  const [orgName, setOrgName] = useState("")
+  const [tagline, setTagline] = useState("")
+  const [website, setWebsite] = useState("")
+  const [orgEmail, setOrgEmail] = useState("")
+  const [orgPhone, setOrgPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [facebook, setFacebook] = useState("")
+  const [instagram, setInstagram] = useState("")
+  const [xHandle, setXHandle] = useState("")
+  const [about, setAbout] = useState("")
 
   // Payment methods
-  const [mpesaEnabled, setMpesaEnabled] = useState(true)
-  const [mpesaShortcode, setMpesaShortcode] = useState("123456")
-  const [mpesaTill, setMpesaTill] = useState("987654")
-  const [mpesaPasskey, setMpesaPasskey] = useState("••••••••••••••")
+  const [mpesaEnabled, setMpesaEnabled] = useState(false)
+  const [mpesaShortcode, setMpesaShortcode] = useState("")
+  const [mpesaTill, setMpesaTill] = useState("")
+  const [mpesaPasskey, setMpesaPasskey] = useState("")
   const [mpesaEnv, setMpesaEnv] = useState<"sandbox" | "production">("sandbox")
-  const [mpesaMin, setMpesaMin] = useState("50")
-  const [mpesaMax, setMpesaMax] = useState("500000")
+  const [mpesaMin, setMpesaMin] = useState("")
+  const [mpesaMax, setMpesaMax] = useState("")
 
-  const [paypalEnabled, setPaypalEnabled] = useState(true)
-  const [paypalClientId, setPaypalClientId] = useState("live_client_id_here")
-  const [paypalSecret, setPaypalSecret] = useState("••••••••••••••")
+  const [paypalEnabled, setPaypalEnabled] = useState(false)
+  const [paypalClientId, setPaypalClientId] = useState("")
+  const [paypalSecret, setPaypalSecret] = useState("")
   const [paypalEnv, setPaypalEnv] = useState<"sandbox" | "production">("sandbox")
-  const [paypalCurrency, setPaypalCurrency] = useState("USD")
+  const [paypalCurrency, setPaypalCurrency] = useState("")
 
   const [bankEnabled, setBankEnabled] = useState(false)
-  const [bankName, setBankName] = useState("Community Bank")
-  const [bankAccount, setBankAccount] = useState("0123456789")
-  const [bankInstructions, setBankInstructions] = useState("Include your full name and phone number as the payment reference.")
+  const [bankName, setBankName] = useState("")
+  const [bankAccount, setBankAccount] = useState("")
+  const [bankInstructions, setBankInstructions] = useState("")
 
-  const [paymentPriority, setPaymentPriority] = useState<string[]>(["M-Pesa", "PayPal", "Bank Transfer"])
+  const [paymentPriority, setPaymentPriority] = useState<string[]>([])
 
   // Users
   const [showAddUser, setShowAddUser] = useState(false)
+  const [adminUsers, setAdminUsers] = useState<SeedUser[]>([])
 
   // Notifications
-  const [adminAlerts, setAdminAlerts] = useState<AdminAlerts>({
-    newDonation: true,
-    dailySummary: true,
-    weeklyReport: true,
-    monthlyReport: false,
-    campaignMilestones: true,
-    failedPayments: true,
-  })
-  const [donorEmails, setDonorEmails] = useState<DonorEmails>({
-    thankYou: true,
-    receipt: true,
-    campaignUpdates: false,
-    completion: true,
-  })
+  const [adminAlerts, setAdminAlerts] = useState<AdminAlerts>(defaultAdminAlerts)
+  const [donorEmails, setDonorEmails] = useState<DonorEmails>(defaultDonorEmails)
 
   // Security
-  const [twoFactor, setTwoFactor] = useState(true)
+  const [twoFactor, setTwoFactor] = useState(false)
   const [autoLogoutMinutes, setAutoLogoutMinutes] = useState(30)
+  const [backupCodes, setBackupCodes] = useState<string[]>([])
+  const [recentSessions, setRecentSessions] = useState<string[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchSettings()
+        if (cancelled) return
+        hydrateSettings(data)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load settings")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  function hydrateSettings(data: SettingsDto) {
+    setOrgName(data.organization?.name ?? "")
+    setTagline(data.organization?.tagline ?? "")
+    setWebsite(data.organization?.website ?? "")
+    setOrgEmail(data.organization?.email ?? "")
+    setOrgPhone(data.organization?.phone ?? "")
+    setAddress(data.organization?.address ?? "")
+    setFacebook(data.organization?.facebook ?? "")
+    setInstagram(data.organization?.instagram ?? "")
+    setXHandle(data.organization?.xHandle ?? "")
+    setAbout(data.organization?.about ?? "")
+
+    setMpesaEnabled(Boolean(data.payments?.mpesa?.enabled))
+    setMpesaShortcode(data.payments?.mpesa?.shortcode ?? "")
+    setMpesaTill(data.payments?.mpesa?.till ?? "")
+    setMpesaPasskey(data.payments?.mpesa?.passkey ?? "")
+    setMpesaEnv((data.payments?.mpesa?.environment ?? "sandbox") as "sandbox" | "production")
+    setMpesaMin(data.payments?.mpesa?.min ?? "")
+    setMpesaMax(data.payments?.mpesa?.max ?? "")
+
+    setPaypalEnabled(Boolean(data.payments?.paypal?.enabled))
+    setPaypalClientId(data.payments?.paypal?.clientId ?? "")
+    setPaypalSecret(data.payments?.paypal?.secret ?? "")
+    setPaypalEnv((data.payments?.paypal?.environment ?? "sandbox") as "sandbox" | "production")
+    setPaypalCurrency(data.payments?.paypal?.currency ?? "")
+
+    setBankEnabled(Boolean(data.payments?.bank?.enabled))
+    setBankName(data.payments?.bank?.name ?? "")
+    setBankAccount(data.payments?.bank?.account ?? "")
+    setBankInstructions(data.payments?.bank?.instructions ?? "")
+
+    setPaymentPriority(data.payments?.priority ?? [])
+
+    setAdminUsers(data.adminUsers ?? [])
+    setAdminAlerts(data.notifications?.adminAlerts ?? defaultAdminAlerts)
+    setDonorEmails(data.notifications?.donorEmails ?? defaultDonorEmails)
+
+    setTwoFactor(Boolean(data.security?.twoFactor))
+    setAutoLogoutMinutes(data.security?.autoLogoutMinutes ?? 30)
+    setBackupCodes(data.security?.backupCodes ?? [])
+    setRecentSessions(data.security?.recentSessions ?? [])
+  }
+
+  async function handleSave(section: SettingsSection, payload: unknown) {
+    setSaving(true)
+    setError(null)
+    try {
+      await updateSettingsSection(section, payload)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save settings")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="space-y-4">
       <div>
         <p className="text-sm font-semibold text-slate-500">Settings</p>
         <p className="text-lg font-bold text-slate-900">Control organization, payments, and security</p>
+        {loading && <p className="mt-1 text-xs text-slate-500">Loading settings...</p>}
+        {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row">
@@ -84,7 +175,7 @@ function SettingsPage(): JSX.Element {
             <SettingsNavItem
               icon={CreditCard}
               label="Payment methods"
-              description="M‑Pesa, PayPal, bank"
+              description="M-Pesa, PayPal, bank"
               active={activeSection === "payments"}
               onClick={() => setActiveSection("payments")}
             />
@@ -148,7 +239,24 @@ function SettingsPage(): JSX.Element {
                   </p>
                 </label>
               </div>
-              <button className="mt-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
+              <button
+                className="mt-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md"
+                onClick={() =>
+                  handleSave("organization", {
+                    name: orgName,
+                    tagline,
+                    website,
+                    email: orgEmail,
+                    phone: orgPhone,
+                    address,
+                    facebook,
+                    instagram,
+                    xHandle,
+                    about,
+                  })
+                }
+                disabled={saving}
+              >
                 Save changes
               </button>
             </section>
@@ -160,7 +268,7 @@ function SettingsPage(): JSX.Element {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Smartphone size={16} className="text-green-600" />
-                    <p className="text-sm font-semibold text-slate-900">M‑Pesa</p>
+                    <p className="text-sm font-semibold text-slate-900">M-Pesa</p>
                   </div>
                   <ToggleRow
                     compact
@@ -192,7 +300,7 @@ function SettingsPage(): JSX.Element {
                   className="mt-3 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                   onClick={() => {
                     // eslint-disable-next-line no-alert
-                    alert("M‑Pesa connection test will be wired to backend.")
+                    alert("M-Pesa connection test will be wired to backend.")
                   }}
                 >
                   Test connection
@@ -291,7 +399,37 @@ function SettingsPage(): JSX.Element {
                 </p>
               </div>
 
-              <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
+              <button
+                className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md"
+                onClick={() =>
+                  handleSave("payments", {
+                    mpesa: {
+                      enabled: mpesaEnabled,
+                      shortcode: mpesaShortcode,
+                      till: mpesaTill,
+                      passkey: mpesaPasskey,
+                      environment: mpesaEnv,
+                      min: mpesaMin,
+                      max: mpesaMax,
+                    },
+                    paypal: {
+                      enabled: paypalEnabled,
+                      clientId: paypalClientId,
+                      secret: paypalSecret,
+                      environment: paypalEnv,
+                      currency: paypalCurrency,
+                    },
+                    bank: {
+                      enabled: bankEnabled,
+                      name: bankName,
+                      account: bankAccount,
+                      instructions: bankInstructions,
+                    },
+                    priority: paymentPriority,
+                  })
+                }
+                disabled={saving}
+              >
                 Save payment settings
               </button>
             </section>
@@ -324,7 +462,7 @@ function SettingsPage(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {seedUsers.map(user => (
+                    {adminUsers.map(user => (
                       <tr key={user.email}>
                         <td className="px-3 py-2 text-xs font-semibold text-slate-900">{user.name}</td>
                         <td className="px-3 py-2 text-xs text-slate-600">{user.email}</td>
@@ -467,7 +605,7 @@ function SettingsPage(): JSX.Element {
               <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                 <div className="flex items-center gap-2">
                   <Smartphone size={16} className="text-purple-600" />
-                  <p className="text-sm font-semibold text-slate-900">Donor auto‑emails</p>
+                  <p className="text-sm font-semibold text-slate-900">Donor auto-emails</p>
                 </div>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <ToggleRow
@@ -511,7 +649,16 @@ function SettingsPage(): JSX.Element {
                 </div>
               </div>
 
-              <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
+              <button
+                className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md"
+                onClick={() =>
+                  handleSave("notifications", {
+                    adminAlerts,
+                    donorEmails,
+                  })
+                }
+                disabled={saving}
+              >
                 Save notification settings
               </button>
             </section>
@@ -546,12 +693,12 @@ function SettingsPage(): JSX.Element {
               <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                 <div className="flex items-center gap-2">
                   <ShieldCheck size={16} className="text-green-600" />
-                  <p className="text-sm font-semibold text-slate-900">Two‑factor authentication</p>
+                  <p className="text-sm font-semibold text-slate-900">Two-factor authentication</p>
                 </div>
                 <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex-1 space-y-1 text-xs text-slate-600">
                     <p>
-                      Protect admin sign‑in with one‑time codes from an authenticator app. Scan the QR
+                      Protect admin sign-in with one-time codes from an authenticator app. Scan the QR
                       code with Google Authenticator, Authy, or a similar app.
                     </p>
                   </div>
@@ -570,15 +717,16 @@ function SettingsPage(): JSX.Element {
                   <div className="space-y-2 text-xs text-slate-600">
                     <p className="font-semibold text-slate-800">Backup codes</p>
                     <p>
-                      Store these one‑time backup codes in a safe place. Each code can be used once if
+                      Store these one-time backup codes in a safe place. Each code can be used once if
                       you lose access to your authenticator app.
                     </p>
                     <div className="rounded-lg bg-slate-900 p-3 font-mono text-[11px] text-slate-50">
-                      4H9K‑7M2Q‑A8D3
-                      <br />
-                      2L7C‑9V5P‑Q1XZ
-                      <br />
-                      8R4N‑3K6J‑Z7YT
+                      {backupCodes.map(code => (
+                        <span key={code}>
+                          {code}
+                          <br />
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -593,8 +741,9 @@ function SettingsPage(): JSX.Element {
                   <div className="space-y-2 text-xs text-slate-600">
                     <p className="font-semibold text-slate-800">Recent sessions</p>
                     <ul className="space-y-1">
-                      <li>Today · Chrome · Nairobi, KE</li>
-                      <li>Yesterday · Safari · Mombasa, KE</li>
+                      {recentSessions.map(session => (
+                        <li key={session}>{session}</li>
+                      ))}
                     </ul>
                     <button
                       className="mt-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
@@ -609,7 +758,7 @@ function SettingsPage(): JSX.Element {
                   <div className="space-y-2 text-xs text-slate-600">
                     <p className="font-semibold text-slate-800">Session settings</p>
                     <label className="space-y-1">
-                      <p className="text-xs font-semibold text-slate-700">Auto‑logout duration (minutes)</p>
+                      <p className="text-xs font-semibold text-slate-700">Auto-logout duration (minutes)</p>
                       <input
                         type="number"
                         min={5}
@@ -623,7 +772,18 @@ function SettingsPage(): JSX.Element {
                 </div>
               </div>
 
-              <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
+              <button
+                className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md"
+                onClick={() =>
+                  handleSave("security", {
+                    twoFactor,
+                    autoLogoutMinutes,
+                    backupCodes,
+                    recentSessions,
+                  })
+                }
+                disabled={saving}
+              >
                 Save security settings
               </button>
             </section>
@@ -764,32 +924,8 @@ interface DonorEmails {
 interface SeedUser {
   name: string
   email: string
-  role: "Super Admin" | "Admin" | "Viewer"
-  status: "Active" | "Inactive"
+  role: "Super Admin" | "Admin" | "Viewer" | string
+  status: "Active" | "Inactive" | string
   lastActive: string
 }
-
-const seedUsers: SeedUser[] = [
-  {
-    name: "Nora Benson",
-    email: "nora@givinghereve.org",
-    role: "Super Admin",
-    status: "Active",
-    lastActive: "Today · 09:24",
-  },
-  {
-    name: "Ayodele James",
-    email: "ayo@givinghereve.org",
-    role: "Admin",
-    status: "Active",
-    lastActive: "Yesterday · 18:12",
-  },
-  {
-    name: "Operations Viewer",
-    email: "viewer@givinghereve.org",
-    role: "Viewer",
-    status: "Inactive",
-    lastActive: "Last week",
-  },
-]
 

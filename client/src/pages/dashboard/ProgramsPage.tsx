@@ -1,12 +1,45 @@
+import { useEffect, useState } from "react"
 import { CalendarDays, Edit3, MapPin, Users } from "lucide-react"
+import { fetchPrograms, type ProgramDto } from "../../services/api"
 
 function ProgramsPage(): JSX.Element {
+  const [programs, setPrograms] = useState<ProgramDto[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchPrograms()
+        if (cancelled) return
+        setPrograms(data)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load programs")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-semibold text-slate-500">Programs & Services</p>
           <p className="text-lg font-bold text-slate-900">Plan, publish, and monitor programs</p>
+          {loading && <p className="mt-1 text-xs text-slate-500">Loading programs...</p>}
+          {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">Add program</button>
@@ -15,7 +48,7 @@ function ProgramsPage(): JSX.Element {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {programsData.map(program => (
+        {programs.map(program => (
           <article key={program.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 hover:-translate-y-0.5 hover:shadow-md transition">
             <div className="flex items-start justify-between">
               <div>
@@ -61,91 +94,13 @@ function ProgramsPage(): JSX.Element {
             </div>
           </article>
         ))}
+        {!loading && programs.length === 0 && (
+          <p className="text-sm text-slate-500">No programs published yet.</p>
+        )}
       </div>
     </div>
   )
 }
 
 export default ProgramsPage
-
-interface ProgramCard {
-  id: string
-  name: string
-  category: string
-  description: string
-  timeline: string
-  beneficiaries: string
-  location: string
-  progress: number
-  status: "Active" | "Planning" | "Paused"
-}
-
-const programsData: ProgramCard[] = [
-  {
-    id: "p1",
-    name: "STEM for Girls",
-    category: "Education",
-    description: "After-school coding and robotics clubs with mentors and laptops provided.",
-    timeline: "Jan - Jun 2025",
-    beneficiaries: "240 students",
-    location: "Lagos, Abuja",
-    progress: 72,
-    status: "Active",
-  },
-  {
-    id: "p2",
-    name: "Safe Shelters",
-    category: "Shelter",
-    description: "Renovation of community shelters with safety, nutrition, and counseling support.",
-    timeline: "Feb - Aug 2025",
-    beneficiaries: "520 families",
-    location: "Kano, Kaduna",
-    progress: 54,
-    status: "Active",
-  },
-  {
-    id: "p3",
-    name: "Maternal Health Clinics",
-    category: "Healthcare",
-    description: "Mobile clinics providing prenatal care, screenings, and health education.",
-    timeline: "Mar - Nov 2025",
-    beneficiaries: "1,100 mothers",
-    location: "Cross River",
-    progress: 38,
-    status: "Planning",
-  },
-  {
-    id: "p4",
-    name: "Volunteer Accelerator",
-    category: "Training",
-    description: "Upskilling volunteers with safeguarding, communications, and leadership workshops.",
-    timeline: "Quarterly",
-    beneficiaries: "320 volunteers",
-    location: "Hybrid",
-    progress: 81,
-    status: "Active",
-  },
-  {
-    id: "p5",
-    name: "Nutrition Drive",
-    category: "Food",
-    description: "Weekly meal packs, fresh produce, and nutrition guidance for families in need.",
-    timeline: "All year",
-    beneficiaries: "2,400 people",
-    location: "Nationwide",
-    progress: 65,
-    status: "Active",
-  },
-  {
-    id: "p6",
-    name: "Digital Safety Labs",
-    category: "Advocacy",
-    description: "Campaigns and workshops on online safety, privacy, and rights for young women.",
-    timeline: "May - Sep 2025",
-    beneficiaries: "800 participants",
-    location: "Online",
-    progress: 44,
-    status: "Paused",
-  },
-]
 
