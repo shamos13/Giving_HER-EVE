@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-import { useParams, Link } from "react-router";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { CAMPAIGNS, getCampaignById } from "../data/campaigns.js";
+import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
+import { fetchCampaignById } from "../services/api";
 
 const formatCurrency = (amount) =>
   new Intl.NumberFormat("en-US", {
@@ -13,196 +14,293 @@ const formatCurrency = (amount) =>
 
 const CampaignDetail = () => {
   const { id } = useParams();
-  const campaign = getCampaignById(id);
+  const [campaign, setCampaign] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedAmount, setSelectedAmount] = useState(20);
 
-  if (!campaign) {
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (!id) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchCampaignById(id);
+        if (cancelled) return;
+        setCampaign(data);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Campaign not found");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen bg-white">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-20">
-          <div className="max-w-md text-center">
-            <p className="text-sm font-semibold text-[#6A0DAD] mb-2">
-              Campaign Not Found
-            </p>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              We couldn&apos;t find that campaign.
-            </h1>
-            <p className="text-gray-600 mb-6 text-sm">
-              It might have been updated or no longer be active. You can return to our
-              active campaigns to explore other ways to support.
-            </p>
-            <Link
-              to="/campaigns"
-              className="inline-flex items-center gap-2 rounded-full bg-[#6A0DAD] text-white px-5 py-2 text-sm font-semibold hover:bg-[#4D0B7E] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Campaigns
-            </Link>
-          </div>
-        </main>
+        <div className="max-w-5xl mx-auto px-4 py-20 text-center text-gray-600">Loading campaign...</div>
         <Footer />
       </div>
     );
   }
 
-  const progress = Math.min(100, Math.round((campaign.raised / campaign.goal) * 100));
+  if (error || !campaign) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="max-w-5xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-3xl font-bold mb-2">Campaign not found</h1>
+          <p className="text-gray-600 mb-6">
+            We couldn't find that campaign.
+          </p>
+          <Link
+            to="/campaigns"
+            className="inline-flex items-center gap-2 text-purple-600 font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to campaigns
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const progress =
+    campaign.goal > 0
+      ? Math.min(100, Math.round((campaign.raised / campaign.goal) * 100))
+      : 0;
+
+  const impactItems = [
+    {
+      amount: 20,
+      label: "provides 5 hygiene kits",
+    },
+    {
+      amount: 50,
+      label: "keeps a girl in school for a year",
+    },
+    {
+      amount: 100,
+      label: "supports a health workshop",
+    },
+  ];
+
+  const galleryImages = [
+    campaign.image,
+    "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/3_oy5jmv.avif",
+    "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014549/4_qcb19a.avif",
+    "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014550/5_wtvump.avif",
+  ];
+
+  const donorList = [
+    { name: "Sarah M.", amount: 50 },
+    { name: "David K.", amount: 100 },
+    { name: "Amina R.", amount: 20 },
+    { name: "Amina R.", amount: 30 },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5FB]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="relative bg-gradient-to-b from-[#6A0DAD] to-[#8B2BD3] text-white pb-20">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-10">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <Link
-                to="/campaigns"
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-purple-100 hover:text-white"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Campaigns
-              </Link>
-            </div>
+      <main className="flex-1 bg-[#F8FAFC]">
+        <section className="py-10 md:py-14">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Link
+              to="/campaigns"
+              className="inline-flex items-center gap-2 text-purple-600 font-semibold mb-6"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to campaigns
+            </Link>
 
-            <div className="text-center">
-              <p className="inline-flex items-center justify-center px-4 py-1 rounded-full bg-white/10 border border-white/20 text-[11px] sm:text-xs font-medium tracking-[0.18em] uppercase mx-auto mb-3">
-                Small effort, big change
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3">
-                {campaign.title}
-              </h1>
-              <p className="text-sm sm:text-base text-purple-100 max-w-2xl mx-auto">
-                {campaign.shortDescription}
-              </p>
-            </div>
-          </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              In-Depth Campaign Details
+            </h1>
 
-          {/* Centered hero image card */}
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-            <div className="rounded-3xl overflow-hidden bg-white shadow-2xl">
+            <div className="relative overflow-hidden rounded-3xl shadow-[0_18px_50px_rgba(15,23,42,0.12)] border border-white/80">
               <img
                 src={campaign.image}
                 alt={campaign.title}
-                className="w-full h-56 sm:h-64 md:h-80 object-cover"
-                loading="lazy"
+                className="w-full h-72 md:h-96 object-cover"
               />
-            </div>
-          </div>
-        </section>
-
-        {/* Main content */}
-        <section className="py-10 md:py-12">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 lg:grid-cols-[1.6fr,1fr] items-start">
-            {/* Left column */}
-            <div className="space-y-8">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6">
-                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-3">
-                  About This Campaign
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 text-white">
+                <p className="text-xs uppercase tracking-[0.25em] text-white/80">
+                  {campaign.category} · {campaign.location}
+                </p>
+                <h2 className="text-3xl md:text-4xl font-bold mt-2">
+                  {campaign.title}
                 </h2>
-                <p className="text-sm md:text-base text-gray-700 leading-relaxed">
-                  {campaign.description}
+                <p className="mt-3 text-sm md:text-base text-white/90 max-w-2xl">
+                  {campaign.shortDescription || campaign.description}
                 </p>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6">
-                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3">
-                  Impact at a Glance
-                </h3>
-                <ul className="space-y-2 text-sm text-gray-700">
-                  <li>• Every contribution moves this campaign closer to full funding.</li>
-                  <li>• Your support helps us respond quickly where the need is greatest.</li>
-                  <li>• Stories and updates from the field will be shared with supporters.</li>
-                </ul>
               </div>
             </div>
 
-            {/* Right column - donation summary */}
-            <aside className="lg:sticky lg:top-24">
-              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 md:p-6">
-                <p className="text-xs font-semibold text-[#6A0DAD] mb-1 uppercase tracking-[0.18em]">
-                  Support This Campaign
-                </p>
-                <p className="text-lg md:text-xl font-bold text-gray-900 mb-3">
-                  {formatCurrency(campaign.raised)} raised of{" "}
-                  {formatCurrency(campaign.goal)}
-                </p>
-                <div className="mb-3">
+            <div className="mt-10 grid gap-8 lg:grid-cols-[1.6fr_0.8fr]">
+              <div className="space-y-8">
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    The Challenge
+                  </h3>
+                  <p className="text-sm leading-relaxed text-gray-600">
+                    {campaign.description}
+                  </p>
+                  <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">
+                    Our Goal
+                  </h3>
+                  <p className="text-sm leading-relaxed text-gray-600">
+                    We aim to reach the full funding target so partners can deliver
+                    supplies, education, and support without interruption.
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Your Impact
+                  </h3>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {impactItems.map((item) => (
+                      <div
+                        key={item.amount}
+                        className="flex items-center gap-3 rounded-2xl bg-[#F9F5FF] px-4 py-3"
+                      >
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F6E7FF] text-[#6A0DAD]">
+                          <Heart className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-gray-900">
+                            {formatCurrency(item.amount)}
+                          </p>
+                          <p className="text-xs text-gray-600">{item.label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Project Gallery
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      Community moments
+                    </span>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {galleryImages.map((image, index) => (
+                      <div
+                        key={`${image}-${index}`}
+                        className="overflow-hidden rounded-2xl border border-gray-100"
+                      >
+                        <img
+                          src={image}
+                          alt={`${campaign.title} gallery ${index + 1}`}
+                          className="h-40 w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm sticky top-6">
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                    <span className="font-semibold text-[#6A0DAD]">
+                      {formatCurrency(campaign.raised)}
+                    </span>
+                    <span>{formatCurrency(campaign.goal)}</span>
+                  </div>
                   <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#F7B500] rounded-full"
+                      className="h-full bg-[#F7B500] rounded-full transition-all duration-500"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <div className="mt-2 flex justify-between text-xs text-gray-600">
+                  <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                    <span>Raised</span>
                     <span>{progress}% funded</span>
-                    <span>Goal: {formatCurrency(campaign.goal)}</span>
                   </div>
-                </div>
-                <div className="mt-4 grid grid-cols-4 gap-2 mb-4">
-                  {[25, 50, 100, 0].map((amount) => (
+
+                  <div className="mt-6 grid grid-cols-2 gap-3 text-sm font-semibold">
+                    {[20, 50, 100].map((amount) => (
+                      <button
+                        key={amount}
+                        type="button"
+                        onClick={() => setSelectedAmount(amount)}
+                        className={`rounded-xl border px-4 py-2 transition ${
+                          selectedAmount === amount
+                            ? "border-[#6A0DAD] bg-[#6A0DAD] text-white shadow"
+                            : "border-gray-200 text-gray-700 hover:border-[#6A0DAD]"
+                        }`}
+                      >
+                        {formatCurrency(amount)}
+                      </button>
+                    ))}
                     <button
-                      key={amount}
-                      className={`text-xs py-2 rounded-full border ${
-                        amount === 50
-                          ? "bg-[#6A0DAD] text-white border-[#6A0DAD]"
-                          : "border-gray-200 text-gray-700 hover:border-[#6A0DAD] hover:text-[#6A0DAD]"
+                      type="button"
+                      onClick={() => setSelectedAmount(0)}
+                      className={`rounded-xl border px-4 py-2 transition ${
+                        selectedAmount === 0
+                          ? "border-[#6A0DAD] bg-[#6A0DAD] text-white shadow"
+                          : "border-gray-200 text-gray-700 hover:border-[#6A0DAD]"
                       }`}
                     >
-                      {amount === 0 ? "Custom" : `$${amount}`}
+                      Other Amount
                     </button>
-                  ))}
-                </div>
-                <button className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#F7B500] hover:bg-[#FFC93C] text-[#4A2A00] text-sm font-semibold py-2.5 transition-colors mb-3">
-                  Complete Donation
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <p className="text-[11px] text-gray-500">
-                  By donating, you agree to our terms. You&apos;ll receive a receipt and
-                  impact updates as this campaign progresses.
-                </p>
-              </div>
-            </aside>
-          </div>
-        </section>
-
-        {/* Related campaigns */}
-        <section className="pb-12">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base md:text-lg font-semibold text-gray-900">
-                More Campaigns You Can Support
-              </h3>
-              <Link
-                to="/campaigns"
-                className="text-xs font-medium text-[#6A0DAD] hover:text-[#4D0B7E] inline-flex items-center gap-1"
-              >
-                View all
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {CAMPAIGNS.filter((c) => c.id !== campaign.id).map((c) => (
-                <Link
-                  key={c.id}
-                  to={`/campaigns/${c.id}`}
-                  className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col"
-                >
-                  <img
-                    src={c.image}
-                    alt={c.title}
-                    className="w-full h-32 object-cover"
-                    loading="lazy"
-                  />
-                  <div className="p-4">
-                    <p className="text-xs text-[#6A0DAD] font-medium mb-1">
-                      {c.category}
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900 line-clamp-2">
-                      {c.title}
-                    </p>
                   </div>
-                </Link>
-              ))}
+
+                  <Link
+                    to="/donate"
+                    className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-[#6A0DAD] px-5 py-3 text-sm font-semibold text-white shadow hover:bg-[#5a0b94] transition"
+                  >
+                    Donate Now
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">
+                    Recent Hero Donors
+                  </h3>
+                  <div className="space-y-3">
+                    {donorList.map((donor, index) => (
+                      <div
+                        key={`${donor.name}-${index}`}
+                        className="flex items-center justify-between text-sm text-gray-700"
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F2E7FF] text-xs font-semibold text-[#6A0DAD]">
+                            {donor.name
+                              .split(" ")
+                              .map((part) => part[0])
+                              .join("")}
+                          </span>
+                          {donor.name}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {formatCurrency(donor.amount)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -213,4 +311,3 @@ const CampaignDetail = () => {
 };
 
 export default CampaignDetail;
-
