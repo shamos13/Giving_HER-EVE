@@ -9,12 +9,26 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { fetchDonationAnalytics, fetchDonationBySource, type DonationAnalyticsResponse, type DonationSourceSlice } from "../../services/api"
+import {
+  fetchDashboardOverview,
+  fetchDonationAnalytics,
+  type DashboardFocus,
+  type DashboardMetric,
+  type DashboardNextSession,
+  type DashboardOperationsUpdate,
+  type DashboardDonation,
+} from "../../services/api"
 
 function DashboardHome(): JSX.Element {
-  const [donationTrend, setDonationTrend] = useState<DonationTrendPoint[]>(donationTrendData)
-  const [sourceSlices, setSourceSlices] = useState<DonationSourceSlice[]>([])
+  const [donationTrend, setDonationTrend] = useState<DonationTrendPoint[]>([])
   const [summary, setSummary] = useState<{ totalAmount: number; totalCount: number } | null>(null)
+  const [metrics, setMetrics] = useState<DashboardMetric[]>([])
+  const [recentDonations, setRecentDonations] = useState<DashboardDonation[]>([])
+  const [volunteerUpdates, setVolunteerUpdates] = useState<DashboardOperationsUpdate[]>([])
+  const [focus, setFocus] = useState<DashboardFocus | null>(null)
+  const [nextSession, setNextSession] = useState<DashboardNextSession | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const end = new Date()
@@ -26,10 +40,12 @@ function DashboardHome(): JSX.Element {
 
     let cancelled = false
     async function load() {
+      setLoading(true)
+      setError(null)
       try {
-        const [analytics, bySource] = await Promise.all([
+        const [analytics, overview] = await Promise.all([
           fetchDonationAnalytics({ start: startIso, end: endIso }),
-          fetchDonationBySource(),
+          fetchDashboardOverview(),
         ])
         if (cancelled) return
 
@@ -37,13 +53,22 @@ function DashboardHome(): JSX.Element {
           month: new Date(point.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
           donations: Number(point.total ?? 0) / 1000,
         }))
-        if (mappedTrend.length > 0) {
-          setDonationTrend(mappedTrend)
-        }
+
+        setDonationTrend(mappedTrend)
         setSummary({ totalAmount: Number(analytics.totalAmount ?? 0), totalCount: analytics.totalCount ?? 0 })
-        setSourceSlices(bySource)
-      } catch {
-        // keep fallback mock data if live call fails
+        setMetrics(overview.metrics ?? [])
+        setRecentDonations(overview.recentDonations ?? [])
+        setVolunteerUpdates(overview.operationsPulse?.updates ?? [])
+        setFocus(overview.focus ?? null)
+        setNextSession(overview.operationsPulse?.nextSession ?? null)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load dashboard")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
     void load()
@@ -51,11 +76,12 @@ function DashboardHome(): JSX.Element {
       cancelled = true
     }
   }, [])
+
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-3">
-        {metricCards.slice(0, 3).map(card => (
-          <MetricCard key={card.title} card={card} />
+        {metrics.map(card => (
+          <MetricCard key={card.id} card={card} />
         ))}
       </section>
 
@@ -70,9 +96,11 @@ function DashboardHome(): JSX.Element {
                   {summary.totalCount} gifts totaling ${summary.totalAmount.toLocaleString()}.
                 </p>
               )}
+              {loading && <p className="mt-1 text-xs text-slate-400">Refreshing dashboard data...</p>}
+              {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
             </div>
             <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-              At‑a‑glance funding momentum
+              At-a-glance funding momentum
             </span>
           </div>
           <div className="mt-4 h-72">
@@ -94,22 +122,22 @@ function DashboardHome(): JSX.Element {
 
         <div className="space-y-4">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-slate-500">Today&apos;s focus</p>
+            <p className="text-sm font-semibold text-slate-500">{focus?.title ?? "Today's focus"}</p>
             <p className="mt-1 text-sm text-slate-700">
-              Use this space each morning to quickly review how donations are trending and which commitments are coming
-              up. Follow up on any large gifts or upcoming events first.
+              {focus?.body ?? "Add a focus note to highlight daily priorities."}
             </p>
-            <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              Tip: Keep this page as your calm command center. Detailed lists live in the Donations, Programs, and
-              Messages sections.
-            </div>
+            {focus?.tip && (
+              <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                {focus.tip}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">Recent donations (sample)</p>
+          <p className="text-sm font-semibold text-slate-500">Recent donations</p>
           <div className="mt-3 space-y-3">
             {recentDonations.map(item => (
               <div key={item.id} className="flex items-center justify-between rounded-xl border border-slate-100 p-3">
@@ -128,6 +156,9 @@ function DashboardHome(): JSX.Element {
                 </div>
               </div>
             ))}
+            {!loading && recentDonations.length === 0 && (
+              <p className="text-xs text-slate-500">No recent donations yet.</p>
+            )}
           </div>
           <button className="mt-3 w-full rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">
             Go to full donations view
@@ -146,19 +177,24 @@ function DashboardHome(): JSX.Element {
                   </span>
                 </div>
                 <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
-                  <div className="h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-500" style={{ width: update.progress }} />
+                  <div className="h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-500" style={{ width: `${update.progress}%` }} />
                 </div>
                 <p className="mt-1 text-xs text-slate-500">{update.caption}</p>
               </div>
             ))}
+            {!loading && volunteerUpdates.length === 0 && (
+              <p className="text-xs text-slate-500">No operations updates yet.</p>
+            )}
           </div>
-          <div className="mt-4 rounded-xl bg-slate-900 px-4 py-3 text-white">
-            <div className="flex items-center gap-2">
-              <Clock3 size={16} />
-              <p className="text-sm font-semibold">Next key session</p>
+          {nextSession && (
+            <div className="mt-4 rounded-xl bg-slate-900 px-4 py-3 text-white">
+              <div className="flex items-center gap-2">
+                <Clock3 size={16} />
+                <p className="text-sm font-semibold">{nextSession.title}</p>
+              </div>
+              <p className="text-xs text-white/80">{nextSession.body}</p>
             </div>
-            <p className="text-xs text-white/80">Use this space to highlight the most important upcoming briefing or event.</p>
-          </div>
+          )}
         </div>
       </section>
     </div>
@@ -186,82 +222,10 @@ function MetricCard({ card }: MetricCardProps): JSX.Element {
 export default DashboardHome
 
 interface MetricCardProps {
-  card: MetricCardData
-}
-
-interface MetricCardData {
-  title: string
-  value: string
-  delta: string
-  caption: string
-  trend: "up" | "down"
-  accent: string
+  card: DashboardMetric
 }
 
 interface DonationTrendPoint {
   month: string
   donations: number
 }
-
-interface DonationRow {
-  id: string
-  donor: string
-  initials: string
-  email: string
-  amount: number
-  category: string
-  date: string
-  status: "Completed" | "Pending" | "Failed"
-}
-
-interface LatestMessage {
-  id: string
-  name: string
-  initials: string
-  type: string
-  preview: string
-  status: "New" | "In progress"
-}
-
-interface VolunteerUpdate {
-  label: string
-  progress: string
-  delta: string
-  caption: string
-}
-
-const metricCards: MetricCardData[] = [
-  { title: "Total Users", value: "4,820", delta: "+8.2% vs last month", caption: "Active across all programs", trend: "up", accent: "bg-gradient-to-br from-purple-600 to-pink-500 text-white" },
-  { title: "Donations", value: "$182,400", delta: "+12.4% vs last period", caption: "Average gift $110", trend: "up", accent: "bg-gradient-to-br from-amber-500 to-yellow-400 text-white" },
-  { title: "Volunteers", value: "1,126", delta: "+4.1% new signups", caption: "Engaged weekly", trend: "up", accent: "bg-gradient-to-br from-slate-900 to-slate-700 text-white" },
-  { title: "Open Messages", value: "38", delta: "-6.3% response time", caption: "Average reply in 2.1h", trend: "down", accent: "bg-gradient-to-br from-blue-500 to-cyan-400 text-white" },
-]
-
-const donationTrendData: DonationTrendPoint[] = [
-  { month: "Jul", donations: 22 },
-  { month: "Aug", donations: 25 },
-  { month: "Sep", donations: 27 },
-  { month: "Oct", donations: 30 },
-  { month: "Nov", donations: 29 },
-  { month: "Dec", donations: 33 },
-]
-
-const recentDonations: DonationRow[] = [
-  { id: "d1", donor: "Amara Keita", initials: "AK", email: "amara@kindmail.com", amount: 500, category: "Education", date: "Dec 2", status: "Completed" },
-  { id: "d2", donor: "Daniel Ikor", initials: "DI", email: "daniel@focus.org", amount: 320, category: "Healthcare", date: "Dec 1", status: "Pending" },
-  { id: "d3", donor: "Lara Obeng", initials: "LO", email: "lara@impact.io", amount: 900, category: "Shelter", date: "Nov 30", status: "Completed" },
-  { id: "d4", donor: "Robin Ade", initials: "RA", email: "robin@ade.com", amount: 150, category: "Food", date: "Nov 30", status: "Completed" },
-]
-
-const latestMessages: LatestMessage[] = [
-  { id: "m1", name: "Serena Okafor", initials: "SO", type: "Volunteer inquiry", preview: "Happy to assist with the holiday drive next week...", status: "New" },
-  { id: "m2", name: "Marco Ibeh", initials: "MI", type: "Donation follow-up", preview: "Please confirm the receipt for our foundation gift...", status: "In progress" },
-  { id: "m3", name: "Hawa Mensah", initials: "HM", type: "Program request", preview: "We want to schedule the workshop for January...", status: "New" },
-]
-
-const volunteerUpdates: VolunteerUpdate[] = [
-  { label: "Background checks", progress: "72%", delta: "+6% this week", caption: "18 volunteers pending verification" },
-  { label: "Shift coverage", progress: "64%", delta: "-3% coverage gap", caption: "Add 6 volunteers to weekend shifts" },
-  { label: "Training completion", progress: "81%", delta: "+4% completion", caption: "Send reminder to new cohort" },
-]
-

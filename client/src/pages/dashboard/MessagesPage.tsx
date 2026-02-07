@@ -1,14 +1,48 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Filter, Mail, Search } from "lucide-react"
+import { fetchMessageInsights, fetchMessages, type MessageDto, type MessageInsights } from "../../services/api"
 
 function MessagesPage(): JSX.Element {
   const [statusFilter, setStatusFilter] = useState<MessageStatusFilter>("all")
   const [typeFilter, setTypeFilter] = useState<MessageTypeFilter>("all")
   const [query, setQuery] = useState("")
+  const [messages, setMessages] = useState<MessageDto[]>([])
+  const [insights, setInsights] = useState<MessageInsights | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const [messagesRes, insightsRes] = await Promise.all([
+          fetchMessages(),
+          fetchMessageInsights(),
+        ])
+        if (cancelled) return
+        setMessages(messagesRes)
+        setInsights(insightsRes)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load messages")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const filteredMessages = useMemo(
     () =>
-      messagesData.filter(message => {
+      messages.filter(message => {
         const matchesStatus = statusFilter === "all" || message.status === statusFilter
         const matchesType = typeFilter === "all" || message.type === typeFilter
         const matchesQuery =
@@ -18,7 +52,7 @@ function MessagesPage(): JSX.Element {
 
         return matchesStatus && matchesType && matchesQuery
       }),
-    [statusFilter, typeFilter, query],
+    [messages, statusFilter, typeFilter, query],
   )
 
   return (
@@ -27,6 +61,8 @@ function MessagesPage(): JSX.Element {
         <div>
           <p className="text-sm font-semibold text-slate-500">Contact Messages</p>
           <p className="text-lg font-bold text-slate-900">Assign, reply, and resolve inquiries</p>
+          {loading && <p className="mt-1 text-xs text-slate-500">Loading messages...</p>}
+          {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
@@ -99,7 +135,7 @@ function MessagesPage(): JSX.Element {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-700">{message.preview}</td>
-                <td className="px-4 py-3 text-slate-700">{message.date}</td>
+                <td className="px-4 py-3 text-slate-700">{new Date(message.createdAt).toLocaleDateString()}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
                     message.status === "Resolved" ? "bg-green-100 text-green-700" : message.status === "In progress" ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-700"
@@ -119,6 +155,13 @@ function MessagesPage(): JSX.Element {
                 </td>
               </tr>
             ))}
+            {!loading && filteredMessages.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
+                  No messages found for the selected filters.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -130,18 +173,23 @@ function MessagesPage(): JSX.Element {
             <p className="text-sm font-semibold text-slate-900">Response SLAs</p>
           </div>
           <div className="mt-3 space-y-2">
-            <SlaRow label="Volunteer inquiries" value="2.1h avg" tone="green" />
-            <SlaRow label="Donation receipts" value="1.4h avg" tone="amber" />
-            <SlaRow label="Partnership requests" value="4.3h avg" tone="blue" />
+            {insights?.sla?.map(row => (
+              <SlaRow key={row.label} label={row.label} value={row.value} tone={row.tone} progress={row.progress} />
+            ))}
+            {!loading && (!insights || insights.sla.length === 0) && (
+              <p className="text-xs text-slate-500">No SLA data available.</p>
+            )}
           </div>
         </div>
         <div className="rounded-2xl bg-white p-4 shadow-sm lg:col-span-2">
           <p className="text-sm font-semibold text-slate-900">Assignment tips</p>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <Tip text="Auto-assign donation questions to finance admins for faster receipts." />
-            <Tip text="Volunteer inquiries should include shift availability and preferred location." />
-            <Tip text="Tag partnership leads with source (email, site form, referral) for follow-up." />
-            <Tip text="Resolve messages with a final note and add knowledge base links when possible." />
+            {insights?.tips?.map(tip => (
+              <Tip key={tip} text={tip} />
+            ))}
+            {!loading && (!insights || insights.tips.length === 0) && (
+              <p className="text-xs text-slate-500">No tips available yet.</p>
+            )}
           </div>
         </div>
       </div>
@@ -149,7 +197,7 @@ function MessagesPage(): JSX.Element {
   )
 }
 
-function SlaRow({ label, value, tone }: SlaRowProps): JSX.Element {
+function SlaRow({ label, value, tone, progress }: SlaRowProps): JSX.Element {
   const toneClass = tone === "green" ? "from-green-500 to-emerald-400" : tone === "amber" ? "from-amber-500 to-yellow-400" : "from-blue-500 to-cyan-400"
   return (
     <div>
@@ -158,7 +206,7 @@ function SlaRow({ label, value, tone }: SlaRowProps): JSX.Element {
         <p>{value}</p>
       </div>
       <div className="mt-1 h-2 w-full rounded-full bg-slate-100">
-        <div className={`h-2 rounded-full bg-gradient-to-r ${toneClass}`} style={{ width: "70%" }} />
+        <div className={`h-2 rounded-full bg-gradient-to-r ${toneClass}`} style={{ width: `${progress}%` }} />
       </div>
     </div>
   )
@@ -174,6 +222,7 @@ interface SlaRowProps {
   label: string
   value: string
   tone: "green" | "amber" | "blue"
+  progress: number
 }
 
 interface TipProps {
@@ -184,19 +233,12 @@ interface MessageRow {
   id: string
   name: string
   email: string
-  type: "Volunteer" | "Donation" | "Partnership" | "General"
+  type: "Volunteer" | "Donation" | "Partnership" | "General" | string
   preview: string
   date: string
-  status: "New" | "In progress" | "Resolved"
+  status: "New" | "In progress" | "Resolved" | string
 }
 
 type MessageStatusFilter = "all" | MessageRow["status"]
 type MessageTypeFilter = "all" | MessageRow["type"]
-
-const messagesData: MessageRow[] = [
-  { id: "m1", name: "Adaeze Chukwu", email: "ada@helper.com", type: "Volunteer", preview: "Available weekends, interested in the shelter program...", date: "Dec 2", status: "New" },
-  { id: "m2", name: "Grace Daniels", email: "grace@foundation.org", type: "Donation", preview: "Please confirm our November wire receipt...", date: "Dec 1", status: "In progress" },
-  { id: "m3", name: "Leo Adebisi", email: "leo@partners.io", type: "Partnership", preview: "Can we co-host the January awareness event?", date: "Dec 1", status: "Resolved" },
-  { id: "m4", name: "Sarah Bello", email: "sarah@community.ng", type: "General", preview: "Requesting brochures for our community center...", date: "Nov 30", status: "New" },
-]
 

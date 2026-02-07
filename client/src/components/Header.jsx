@@ -10,7 +10,8 @@ const Header = () => {
 
     const navLinks = [
         {name: "Home", path: "/"},
-        {name: "Events", path: "/#"},
+        {name: "Our Impact", path: "/impact"},
+        {name: "Our Campaigns", path: "/campaigns"},
         {name: "Donation", path: "/donate"},
         {name: "About", path: "/about"},
         {name: "Contact", path: "/contact"},
@@ -32,8 +33,8 @@ const Header = () => {
                     >
                         <Link to="/">
                             <img
-                                src="amos.svg"
-                                alt="Logo"
+                                src="/amos.svg"
+                                alt="Giving Her E.V.E logo"
                                 className="h-6 md:h-8 w-auto object-contain"
                             />
                         </Link>

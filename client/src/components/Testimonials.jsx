@@ -1,4 +1,38 @@
+import { useEffect, useState } from "react";
+import { fetchTestimonials } from "../services/api";
+
 const Testimonials = () => {
+    const [testimonials, setTestimonials] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function load() {
+            setLoading(true);
+            setError(null);
+            try {
+                const data = await fetchTestimonials();
+                if (cancelled) return;
+                setTestimonials(data);
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err instanceof Error ? err.message : "Failed to load testimonials");
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        }
+        void load();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const featured = testimonials[0];
+
     return (
         <section className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8">
             <div
@@ -11,26 +45,36 @@ const Testimonials = () => {
                     className="mx-auto h-12"
                 />
 
-                <figure className="mt-10">
-                    <blockquote className="text-center text-xl/8 font-semibold text-gray-900 sm:text-2xl/9">
-                        <p>
-                            " The team’s dedication to quality and excellence truly exceeded my expectations. From the initial consultation to the final deliverable, every detail was carefully managed, and they took the time to understand my unique needs and vision."</p>
-                    </blockquote>
-                    <figcaption className="mt-10">
-                        <img
-                            alt=""
-                            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                            className="mx-auto size-10 rounded-full"
-                        />
-                        <div className="mt-4 flex items-center justify-center space-x-3 text-base">
-                            <div className="font-semibold text-gray-900">Patience Chacha</div>
-                            <svg width={3} height={3} viewBox="0 0 2 2" aria-hidden="true" className="fill-gray-900">
-                                <circle r={1} cx={1} cy={1} />
-                            </svg>
-                            <div className="text-gray-600">CEO of GivingHerE.V.E</div>
-                        </div>
-                    </figcaption>
-                </figure>
+                {loading && <p className="mt-10 text-center text-sm text-gray-500">Loading testimonials...</p>}
+                {error && <p className="mt-10 text-center text-sm text-rose-600">Error: {error}</p>}
+
+                {featured && (
+                    <figure className="mt-10">
+                        <blockquote className="text-center text-xl/8 font-semibold text-gray-900 sm:text-2xl/9">
+                            <p>
+                                {featured.quote}
+                            </p>
+                        </blockquote>
+                        <figcaption className="mt-10">
+                            <img
+                                alt={featured.name}
+                                src={featured.avatar}
+                                className="mx-auto size-10 rounded-full"
+                            />
+                            <div className="mt-4 flex items-center justify-center space-x-3 text-base">
+                                <div className="font-semibold text-gray-900">{featured.name}</div>
+                                <svg width={3} height={3} viewBox="0 0 2 2" aria-hidden="true" className="fill-gray-900">
+                                    <circle r={1} cx={1} cy={1} />
+                                </svg>
+                                <div className="text-gray-600">{featured.role}</div>
+                            </div>
+                        </figcaption>
+                    </figure>
+                )}
+
+                {!loading && !featured && !error && (
+                    <p className="mt-10 text-center text-sm text-gray-500">No testimonials available yet.</p>
+                )}
             </div>
         </section>
     )
