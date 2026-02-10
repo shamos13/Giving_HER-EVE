@@ -195,7 +195,6 @@
       "status": "Completed",
       "createdAt": "2025-11-29T08:40:00.000Z"
     },
-    
     {
       "id": 8406,
       "amount": 500,
@@ -615,7 +614,36 @@
         "status": "Inactive",
         "lastActive": "Last week"
       }
-    ]
+    ],
+    "sponsors": {
+      "items": [
+        {
+          "id": "sponsor-2",
+          "name": "Upwork",
+          "icon": ""
+        },
+        {
+          "id": "sponsor-3",
+          "name": "Notion",
+          "icon": ""
+        },
+        {
+          "id": "sponsor-4",
+          "name": "Medium",
+          "icon": ""
+        },
+        {
+          "id": "sponsor-5",
+          "name": "Airbnb",
+          "icon": ""
+        },
+        {
+          "id": "sponsor-6",
+          "name": "Ripple",
+          "icon": ""
+        }
+      ]
+    }
   },
   "dashboard": {
     "focus": {

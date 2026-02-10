@@ -217,6 +217,15 @@ export interface SettingsDto {
     status: "Active" | "Inactive" | string;
     lastActive: string;
   }[];
+  sponsors: {
+    items: SponsorDto[];
+  };
+}
+
+export interface SponsorDto {
+  id: string;
+  name: string;
+  icon?: string;
 }
 
 export type OrganizationDto = SettingsDto["organization"];
@@ -433,6 +442,11 @@ export async function fetchStories(): Promise<StoryDto[]> {
 export async function fetchOrganization(): Promise<OrganizationDto> {
   const res = await fetch(`${API_BASE_URL}/api/organization`);
   return handleResponse<OrganizationDto>(res);
+}
+
+export async function fetchSponsors(): Promise<SponsorDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/sponsors`);
+  return handleResponse<SponsorDto[]>(res);
 }
 
 export async function fetchAdminCampaigns(): Promise<CampaignDto[]> {
