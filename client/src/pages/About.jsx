@@ -26,12 +26,48 @@ const About = () =>{
     ]
 
     const milestones = [
-        { year: "2019", event: "Giving Her E.V.E founded with a mission to support 100 women" },
-        { year: "2020", event: "Distributed first 500 menstrual health kits in Kibera" },
-        { year: "2021", event: "Expanded to 5 communities, supporting over 1,000 women and girls" },
-        { year: "2022", event: "Launched education support program, providing 800 school kits" },
-        { year: "2023", event: "Reached 15 communities, impacting 2,000+ lives" },
-        { year: "2024", event: "Supporting 2,500+ women and girls across East Africa" }
+        {
+            title: "Foundation Laid",
+            bullets: [
+                "Organization founded",
+                "First batch of recyclable menstrual kits distributed",
+                "Pilot education workshops conducted in 3 remote villages"
+            ]
+        },
+        {
+            title: "Scaling Reach",
+            accent: true,
+            bullets: [
+                "1,000+ girls and women reached with products",
+                "Menstrual health curriculum co-developed with local educators",
+                "First partnerships with local NGOs and community health workers"
+            ]
+        },
+        {
+            title: "Community Ownership",
+            bullets: [
+                "Local ambassadors trained to lead education sessions",
+                "Establishment of small community-run production/distribution hubs",
+                "Over 80% of served communities report reduced stigma"
+            ]
+        },
+        {
+            title: "Regional Impact",
+            accent: true,
+            bullets: [
+                "Expanded into 3 new regions",
+                "Introduction of mobile education units",
+                "Hosted first regional menstrual health summit"
+            ]
+        },
+        {
+            title: "Systemic Change",
+            bullets: [
+                "Advocating for menstrual health policy inclusion",
+                "Scaling sustainable production models across borders",
+                "Impacted 100,000+ menstruators and counting"
+            ]
+        }
     ];
 
     return(
@@ -214,6 +250,80 @@ const About = () =>{
                 </div>
             </section>
             <TeamAbout/>
+
+            {/* Milestones */}
+            <section className="relative py-12 md:py-20 bg-[#F6F2FB] overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute -top-16 -right-10 h-48 w-48 rounded-full bg-[#EADDFB] blur-3xl opacity-70"/>
+                    <div className="absolute -bottom-14 -left-8 h-52 w-52 rounded-full bg-[#F3E7FF] blur-3xl opacity-70"/>
+                </div>
+                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div
+                        className="text-center mb-10 md:mb-14"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true }}
+                    >
+                        <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[#6A0DAD] mb-3">
+                            Milestones
+                        </p>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#1B0D29] mb-3">
+                            Our Progress in Motion
+                        </h2>
+                        <p className="text-sm sm:text-base text-[#637081] max-w-2xl mx-auto">
+                            A living timeline of growth, partnership, and community-led impact across East Africa.
+                        </p>
+                    </motion.div>
+
+                    <div className="relative">
+                        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-[#C9B1F5] via-[#6A0DAD] to-[#C9B1F5]"/>
+                        <div className="space-y-10 md:space-y-14">
+                            {milestones.map((milestone, index) => {
+                                const isLeft = index % 2 === 0;
+                                return (
+                                    <div
+                                        key={milestone.title}
+                                        className={`relative flex ${isLeft ? "md:justify-start" : "md:justify-end"}`}
+                                    >
+                                        <div className="absolute left-4 md:left-1/2 top-6 h-3.5 w-3.5 rounded-full bg-[#6A0DAD] ring-4 ring-white shadow-md"/>
+                                        <motion.div
+                                            className={`ml-10 md:ml-0 md:w-[calc(50%-2.5rem)] ${
+                                                isLeft ? "md:pr-12" : "md:pl-12"
+                                            }`}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.5, delay: index * 0.05 }}
+                                            viewport={{ once: true, margin: "-60px" }}
+                                        >
+                                            <div className="rounded-2xl bg-white/90 border border-white shadow-lg backdrop-blur p-6 md:p-7">
+                                                <p className="text-[11px] uppercase tracking-[0.3em] text-[#6A0DAD] font-semibold mb-3">
+                                                    Milestone {String(index + 1).padStart(2, "0")}
+                                                </p>
+                                                <h3 className="text-lg md:text-xl font-semibold text-[#1B0D29] mb-3">
+                                                    {milestone.accent ? (
+                                                        <span className="text-[#6A0DAD] italic">{milestone.title}</span>
+                                                    ) : (
+                                                        milestone.title
+                                                    )}
+                                                </h3>
+                                                <ul className="space-y-2 text-sm md:text-base text-[#4B5363]">
+                                                    {milestone.bullets.map((item) => (
+                                                        <li key={item} className="flex items-start gap-2">
+                                                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#6A0DAD]"/>
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </motion.div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* Impact Preview */}
             <section className="relative py-12 md:py-20 bg-[#6A0DAD] text-white">

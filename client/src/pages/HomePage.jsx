@@ -12,6 +12,7 @@ import Team from "../components/Team.jsx";
 import Hero from "../components/Hero.jsx";
 import { motion } from "framer-motion";
 import {useEffect, useState} from "react";
+import { Link } from "react-router";
 
 const HERO_SLIDES = [
     {
@@ -110,13 +111,18 @@ const HeroSection = () => {
                     transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                     className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4"
                 >
-                    <button
-                        className="bg-[#F036DC] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105">
+                    <Link
+                        to="/donate"
+                        className="bg-[#F036DC] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 text-center"
+                    >
                         Donate Now
-                    </button>
-                    <button className="border border-white text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:bg-white hover:text-purple-600">
+                    </Link>
+                    <Link
+                        to="/about"
+                        className="border border-white text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:bg-white hover:text-purple-600 text-center"
+                    >
                         Learn More
-                    </button>
+                    </Link>
                 </motion.div>
             </div>
 
@@ -268,8 +274,12 @@ const CharityService = () => {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 viewport={{ once: true }}
             >
-                <button className="bg-[#F036DC] text-white px-6 py-2 rounded-full font-semibold flex items-center justify-center transition-all duration-300 hover:scale-105">
-                    Learn About Our Work <ArrowRight className="ml-2 h-5 w-5"/></button>
+                <Link
+                    to="/about"
+                    className="bg-[#F036DC] text-white px-6 py-2 rounded-full font-semibold flex items-center justify-center transition-all duration-300 hover:scale-105"
+                >
+                    Learn About Our Work <ArrowRight className="ml-2 h-5 w-5"/>
+                </Link>
             </motion.div>
         </section>
     )
@@ -315,10 +325,12 @@ const AboutUs = ()=>{
                         Our mission is to provide inclusive services that cater to the diverse needs of people from all
                         walks of life.
                     </p>
-                    <button
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded-full py-2 px-5 w-fit transition-all duration-300 hover:scale-105">
+                    <Link
+                        to="/about"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded-full py-2 px-5 w-fit transition-all duration-300 hover:scale-105"
+                    >
                         Learn more
-                    </button>
+                    </Link>
                     <motion.div 
                         className="absolute bottom-0 -left-10 hidden lg:block"
                         initial={{ opacity: 0, scale: 0 }}
@@ -398,13 +410,18 @@ const CallToAction = ()=>{
                     transition={{ duration: 0.8, delay: 0.4 }}
                     viewport={{ once: true }}
                 >
-                    <button
-                        className="bg-[#F036DC] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105">
+                    <Link
+                        to="/donate"
+                        className="bg-[#F036DC] hover:bg-yellow-500 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 text-center"
+                    >
                         Donate Now
-                    </button>
-                    <button className="border border-white text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:bg-white hover:text-purple-600">
+                    </Link>
+                    <Link
+                        to="/contact"
+                        className="border border-white text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:bg-white hover:text-purple-600 text-center"
+                    >
                         Contact Us
-                    </button>
+                    </Link>
                 </motion.div>
             </div>
         </section>

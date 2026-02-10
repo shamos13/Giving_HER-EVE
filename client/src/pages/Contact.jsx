@@ -1,10 +1,12 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import { Link } from "react-router";
 import {Users, Mail, MapPin, MessageCircle, Phone, Send, Heart} from "lucide-react";
 import Header from "../components/Header.jsx";
 import {Input} from "@headlessui/react";
 import FAQs from "../components/FAQs.jsx";
 import NewsLetter from "../components/NewsLetter.jsx";
 import Footer from "../components/Footer.jsx";
+import { fetchOrganization } from "../services/api";
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -15,6 +17,28 @@ const Contact = () => {
         inquiry_type: "",
         message: "",
     });
+    const [organization, setOrganization] = useState(null);
+    const [orgError, setOrgError] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function loadOrganization() {
+            try {
+                const data = await fetchOrganization();
+                if (!cancelled) {
+                    setOrganization(data);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setOrgError(err instanceof Error ? err.message : "Failed to load contact info");
+                }
+            }
+        }
+        void loadOrganization();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -32,23 +56,31 @@ const Contact = () => {
     };
 
 
+    const fallbackOrganization = {
+        address: "Nairobi, Kenya",
+        phone: "+254 792 496622",
+        email: "info@givinghereve.org",
+    };
+
+    const org = organization && Object.keys(organization).length > 0 ? organization : fallbackOrganization;
+
     const contactInfo = [
         {
             icon: <MapPin className="h-6 w-6"/>,
             title:"Our location",
-            details:["Nairobi, Kenya", "East Africa"],
+            details:[org.address || fallbackOrganization.address, "East Africa"],
             description: "Visit Us or Meet Us in the field"
         },
         {
             icon: <Phone className="h-6 w-6"/>,
             title:"Phone",
-            details:["+254 792 496622", "+254 706 129245"],
+            details:[org.phone || fallbackOrganization.phone],
             description: "Call us during business hours for immediate assistance"
         },
         {
             icon: <Mail className="h-6 w-6"/>,
             title:"Email",
-            details:["info@givinghereve.org"],
+            details:[org.email || fallbackOrganization.email],
             description: "Send us an email and we'll respond within 24 hours"
         },
         /* {
@@ -107,12 +139,15 @@ const Contact = () => {
             {/* Contact information */}
             <section className="py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-[#232027] mb-4"> Contact Information</h2>
-                        <p className="text-xl text-[#637081] max-w-2xl mx-auto text-balance">
-                            Multiple ways to reach us - choose what works best for you.
-                        </p>
-                    </div>
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-bold text-[#232027] mb-4"> Contact Information</h2>
+                    <p className="text-xl text-[#637081] max-w-2xl mx-auto text-balance">
+                        Multiple ways to reach us - choose what works best for you.
+                    </p>
+                    {orgError && (
+                        <p className="mt-3 text-sm text-rose-600">Error: {orgError}</p>
+                    )}
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {contactInfo.map((info, index) => (
@@ -141,7 +176,7 @@ const Contact = () => {
             </section>
 
             {/* Contact form & Quick Actions */}
-            <section className="py-20 bg-[#ECF3F8]">
+            <section className="py-20 bg-[#ECF3F8]" id="contact-form">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                         {/* Contact Form */}
@@ -278,12 +313,12 @@ const Contact = () => {
                                 <p className="text-gray-600 mb-4 text-sm">
                                     Ready to volunteer? Apply now and start making a difference.
                                 </p>
-                                <button
-                                    onClick={() => alert('Volunteer application coming soon!')}
-                                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                                <Link
+                                    to="/contact#contact-form"
+                                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center justify-center"
                                 >
                                     Volunteer Application
-                                </button>
+                                </Link>
                             </div>
 
                             {/* Make a Donation */}
@@ -295,12 +330,12 @@ const Contact = () => {
                                 <p className="text-gray-600 mb-4 text-sm">
                                     Support our programs with a secure online donation.
                                 </p>
-                                <button
-                                    onClick={() => alert('Donation page coming soon!')}
-                                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                                <Link
+                                    to="/donate"
+                                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 inline-flex items-center justify-center"
                                 >
                                     Donate Now
-                                </button>
+                                </Link>
                             </div>
 
                             {/* Emergency Contact */}

@@ -11,7 +11,6 @@ import StoryDetail from "./pages/StoryDetail.jsx"
 import ScrollToTop from "./components/ScrollToTop.jsx"
 import DashboardLayout from "./pages/dashboard/DashboardLayout"
 import DashboardHome from "./pages/dashboard/DashboardHome"
-import UsersPage from "./pages/dashboard/UsersPage"
 import DonationsPage from "./pages/dashboard/DonationsPage"
 import ProgramsPage from "./pages/dashboard/ProgramsPage"
 import ContentPage from "./pages/dashboard/ContentPage"
@@ -34,7 +33,6 @@ function App(): JSX.Element {
         <Route path="/campaigns/:id" element={<CampaignDetail />} />
         <Route path="/dashboard/*" element={<DashboardLayout />}>
           <Route index element={<DashboardHome />} />
-          <Route path="users" element={<UsersPage />} />
           <Route path="donations" element={<DonationsPage />} />
           <Route path="programs" element={<ProgramsPage />} />
           <Route path="content" element={<ContentPage />} />

@@ -217,7 +217,18 @@ export interface SettingsDto {
     status: "Active" | "Inactive" | string;
     lastActive: string;
   }[];
+  sponsors: {
+    items: SponsorDto[];
+  };
 }
+
+export interface SponsorDto {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
+export type OrganizationDto = SettingsDto["organization"];
 
 export interface CampaignDto {
   id: string;
@@ -232,6 +243,8 @@ export interface CampaignDto {
   location: string;
   category: string;
   status?: string;
+  startDate?: string;
+  endDate?: string | null;
 }
 
 export interface StoryDto {
@@ -242,6 +255,9 @@ export interface StoryDto {
   imageUrl: string;
   status?: string;
   campaignId?: string;
+  area?: string;
+  date?: string;
+  location?: string;
 }
 
 export interface TestimonialDto {
@@ -421,6 +437,100 @@ export async function fetchCampaignById(id: string): Promise<CampaignDto> {
 export async function fetchStories(): Promise<StoryDto[]> {
   const res = await fetch(`${API_BASE_URL}/api/stories`);
   return handleResponse<StoryDto[]>(res);
+}
+
+export async function fetchOrganization(): Promise<OrganizationDto> {
+  const res = await fetch(`${API_BASE_URL}/api/organization`);
+  return handleResponse<OrganizationDto>(res);
+}
+
+export async function fetchSponsors(): Promise<SponsorDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/sponsors`);
+  return handleResponse<SponsorDto[]>(res);
+}
+
+export async function fetchAdminCampaigns(): Promise<CampaignDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/campaigns`, {
+    headers: adminHeaders(),
+  });
+  return handleResponse<CampaignDto[]>(res);
+}
+
+export async function createAdminCampaign(payload: Partial<CampaignDto>): Promise<CampaignDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/campaigns`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<CampaignDto>(res);
+}
+
+export async function updateAdminCampaign(id: string, payload: Partial<CampaignDto>): Promise<CampaignDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/campaigns/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<CampaignDto>(res);
+}
+
+export async function deleteAdminCampaign(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/campaigns/${id}`, {
+    method: "DELETE",
+    headers: adminHeaders(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
+}
+
+export async function fetchAdminStories(): Promise<StoryDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/stories`, {
+    headers: adminHeaders(),
+  });
+  return handleResponse<StoryDto[]>(res);
+}
+
+export async function createAdminStory(payload: Partial<StoryDto>): Promise<StoryDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/stories`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<StoryDto>(res);
+}
+
+export async function updateAdminStory(id: string, payload: Partial<StoryDto>): Promise<StoryDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/stories/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<StoryDto>(res);
+}
+
+export async function deleteAdminStory(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/stories/${id}`, {
+    method: "DELETE",
+    headers: adminHeaders(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
 }
 
 export async function fetchTestimonials(): Promise<TestimonialDto[]> {

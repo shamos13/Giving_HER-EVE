@@ -197,6 +197,16 @@ app.get("/api/stories", async (_req, res) => {
   res.json(stories);
 });
 
+app.get("/api/organization", async (_req, res) => {
+  const db = await readDb();
+  res.json(db.settings?.organization || {});
+});
+
+app.get("/api/sponsors", async (_req, res) => {
+  const db = await readDb();
+  res.json(db.settings?.sponsors?.items || []);
+});
+
 app.get("/api/testimonials", async (_req, res) => {
   const db = await readDb();
   const testimonials = (db.testimonials || []).filter(testimonial => testimonial.status === "Published");
@@ -349,6 +359,16 @@ app.get("/api/admin/users", requireAdmin, async (_req, res) => {
 app.get("/api/admin/content/sections", requireAdmin, async (_req, res) => {
   const db = await readDb();
   res.json(db.contentSections || []);
+});
+
+app.get("/api/admin/campaigns", requireAdmin, async (_req, res) => {
+  const db = await readDb();
+  res.json(db.campaigns || []);
+});
+
+app.get("/api/admin/stories", requireAdmin, async (_req, res) => {
+  const db = await readDb();
+  res.json(db.stories || []);
 });
 
 app.put("/api/admin/content/sections/:id", requireAdmin, async (req, res) => {
