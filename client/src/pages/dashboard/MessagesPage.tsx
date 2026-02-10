@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Filter, Mail, Search } from "lucide-react"
+import { CheckCircle2, Mail, MessageSquare, Search, Send } from "lucide-react"
 import { fetchMessageInsights, fetchMessages, type MessageDto, type MessageInsights } from "../../services/api"
 
 function MessagesPage(): JSX.Element {
@@ -8,6 +8,8 @@ function MessagesPage(): JSX.Element {
   const [query, setQuery] = useState("")
   const [messages, setMessages] = useState<MessageDto[]>([])
   const [insights, setInsights] = useState<MessageInsights | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,6 +26,9 @@ function MessagesPage(): JSX.Element {
         if (cancelled) return
         setMessages(messagesRes)
         setInsights(insightsRes)
+        if (messagesRes.length > 0) {
+          setSelectedId(messagesRes[0].id)
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Failed to load messages")
@@ -55,23 +60,38 @@ function MessagesPage(): JSX.Element {
     [messages, statusFilter, typeFilter, query],
   )
 
+  useEffect(() => {
+    if (filteredMessages.length === 0) {
+      setSelectedId(null)
+      return
+    }
+    if (!selectedId || !filteredMessages.some(message => message.id === selectedId)) {
+      setSelectedId(filteredMessages[0].id)
+    }
+  }, [filteredMessages, selectedId])
+
+  const selectedMessage = filteredMessages.find(message => message.id === selectedId) ?? null
+
+  function handleReply() {
+    if (!selectedMessage) return
+    if (!replyText.trim()) {
+      // eslint-disable-next-line no-alert
+      alert("Write a reply before sending.")
+      return
+    }
+    // eslint-disable-next-line no-alert
+    alert(`Reply sent to ${selectedMessage.email}.`)
+    setReplyText("")
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-500">Contact Messages</p>
-          <p className="text-lg font-bold text-slate-900">Assign, reply, and resolve inquiries</p>
+          <p className="text-sm font-semibold text-slate-500">Helpdesk Inbox</p>
+          <p className="text-lg font-bold text-slate-900">Read, reply, and resolve supporter messages</p>
           {loading && <p className="mt-1 text-xs text-slate-500">Loading messages...</p>}
           {error && <p className="mt-1 text-xs text-rose-600">Error: {error}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
-            <Filter size={16} />
-            Quick filters
-          </button>
-          <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
-            New message
-          </button>
         </div>
       </div>
 
@@ -108,62 +128,145 @@ function MessagesPage(): JSX.Element {
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Name</th>
-              <th className="px-4 py-3 font-semibold">Inquiry</th>
-              <th className="px-4 py-3 font-semibold">Message</th>
-              <th className="px-4 py-3 font-semibold">Date</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+      <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-900">Inbox</p>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              {filteredMessages.length} messages
+            </span>
+          </div>
+          <div className="mt-3 space-y-2">
             {filteredMessages.map(message => (
-              <tr key={message.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-slate-900">{message.name}</p>
-                  <p className="text-xs text-slate-500">{message.email}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    message.type === "Volunteer" ? "bg-purple-100 text-purple-700" : message.type === "Donation" ? "bg-amber-100 text-amber-700" : message.type === "Partnership" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"
-                  }`}>
-                    {message.type}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-slate-700">{message.preview}</td>
-                <td className="px-4 py-3 text-slate-700">{new Date(message.createdAt).toLocaleDateString()}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    message.status === "Resolved" ? "bg-green-100 text-green-700" : message.status === "In progress" ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-700"
+              <button
+                key={message.id}
+                className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${
+                  selectedId === message.id
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-100 bg-slate-50 text-slate-700 hover:border-slate-200"
+                }`}
+                onClick={() => setSelectedId(message.id)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className={`font-semibold ${selectedId === message.id ? "text-white" : "text-slate-900"}`}>
+                      {message.name}
+                    </p>
+                    <p className={`text-xs ${selectedId === message.id ? "text-white/70" : "text-slate-500"}`}>
+                      {message.email}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    message.status === "Resolved"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : message.status === "In progress"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-slate-200 text-slate-700"
                   }`}>
                     {message.status}
                   </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50">
-                      Reply
-                    </button>
-                    <button className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-slate-800">
-                      Resolve
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                </div>
+                <p className={`mt-2 text-xs ${selectedId === message.id ? "text-white/70" : "text-slate-500"}`}>
+                  {message.preview}
+                </p>
+                <div className={`mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wide ${
+                  selectedId === message.id ? "text-white/60" : "text-slate-400"
+                }`}>
+                  <span>{message.type}</span>
+                  <span>•</span>
+                  <span>{new Date(message.createdAt).toLocaleDateString()}</span>
+                </div>
+              </button>
             ))}
             {!loading && filteredMessages.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
-                  No messages found for the selected filters.
-                </td>
-              </tr>
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                No messages found for the selected filters.
+              </p>
             )}
-          </tbody>
-        </table>
+          </div>
+        </aside>
+
+        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          {selectedMessage ? (
+            <>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-500">Conversation</p>
+                  <p className="text-lg font-bold text-slate-900">{selectedMessage.name}</p>
+                  <p className="text-xs text-slate-500">{selectedMessage.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    selectedMessage.type === "Volunteer"
+                      ? "bg-purple-100 text-purple-700"
+                      : selectedMessage.type === "Donation"
+                        ? "bg-amber-100 text-amber-700"
+                        : selectedMessage.type === "Partnership"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-slate-100 text-slate-700"
+                  }`}>
+                    {selectedMessage.type}
+                  </span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    selectedMessage.status === "Resolved"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : selectedMessage.status === "In progress"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-slate-200 text-slate-700"
+                  }`}>
+                    {selectedMessage.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                  <MessageSquare size={14} />
+                  Message
+                </div>
+                <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">
+                  {selectedMessage.message || selectedMessage.preview}
+                </p>
+                <p className="mt-3 text-xs text-slate-500">
+                  Received {new Date(selectedMessage.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                <label className="text-sm font-semibold text-slate-900">Reply</label>
+                <textarea
+                  className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  placeholder="Write a response to the supporter..."
+                  value={replyText}
+                  onChange={event => setReplyText(event.target.value)}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <button
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
+                    onClick={handleReply}
+                  >
+                    <Send size={14} />
+                    Send reply
+                  </button>
+                  <button
+                    className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700"
+                    onClick={() => {
+                      // eslint-disable-next-line no-alert
+                      alert("Resolve action will be wired to the backend.")
+                    }}
+                  >
+                    <CheckCircle2 size={14} />
+                    Mark resolved
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="grid h-full place-items-center text-sm text-slate-500">
+              Select a message to read and reply.
+            </div>
+          )}
+        </section>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -241,4 +344,3 @@ interface MessageRow {
 
 type MessageStatusFilter = "all" | MessageRow["status"]
 type MessageTypeFilter = "all" | MessageRow["type"]
-

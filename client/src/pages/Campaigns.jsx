@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
+import PartnerStrip from "../components/PartnerStrip.jsx";
 import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { Link } from "react-router";
 import { fetchActiveCampaigns } from "../services/api";
@@ -202,37 +203,6 @@ const ActiveCampaigns = () => {
           {!loading && filteredCampaigns.length === 0 && (
             <p className="text-sm text-gray-500">No campaigns match your filters right now.</p>
           )}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const PartnerStrip = () => {
-  const partners = [
-    "Shopify",
-    "Upwork",
-    "Notion",
-    "Medium",
-    "Airbnb",
-    "Ripple",
-  ];
-
-  return (
-    <section className="bg-gradient-to-r from-[#7A2BCB] via-[#8F3CD6] to-[#B066EA] py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-xs uppercase tracking-[0.3em] text-white/70 mb-6">
-          Trusted by our supporters
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-6 text-white/80 text-sm font-semibold">
-          {partners.map((partner) => (
-            <span
-              key={partner}
-              className="px-4 py-2 rounded-full bg-white/10 border border-white/15"
-            >
-              {partner}
-            </span>
-          ))}
         </div>
       </div>
     </section>
