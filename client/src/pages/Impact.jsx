@@ -17,6 +17,9 @@ const IMPACT_STATS = [
   { label: "Education kits delivered", value: "800" },
 ];
 
+const stripHtml = (value) =>
+  value ? value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
+
 const FALLBACK_DATES = [
   "Feb 12, 2024",
   "Jan 28, 2024",
@@ -112,7 +115,7 @@ const Impact = () => {
     return normalizedStories.filter((story) => {
       const matchesArea = activeArea === "All Stories" || story.area === activeArea;
       if (!query) return matchesArea;
-      const haystack = `${story.title} ${story.excerpt} ${story.content ?? ""}`.toLowerCase();
+      const haystack = `${story.title} ${story.excerpt} ${stripHtml(story.content ?? "")}`.toLowerCase();
       return matchesArea && haystack.includes(query);
     });
   }, [activeArea, normalizedStories, searchTerm]);
@@ -134,49 +137,38 @@ const Impact = () => {
     <div className="min-h-screen bg-[#FAFAFA]">
       <Header />
 
-      <section className="bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
-          <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[#6A0DAD] mb-3">
-            Our Impact Journal
-          </p>
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-            <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Stories of Impact
-              </h1>
-              <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
-                See how Giving Her E.V.E programs advance equality, voice, and empowerment across East Africa.
-                This journal documents program outcomes, partnerships, and the change your support makes possible.
-              </p>
-            </div>
-            <div className="w-full max-w-md">
-              <label className="relative flex items-center rounded-full border border-gray-200 bg-white px-4 py-3 shadow-sm focus-within:border-[#6A0DAD]">
-                <Search className="h-4 w-4 text-gray-400" />
-                <input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search stories"
-                  className="ml-3 flex-1 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
-                />
-              </label>
-            </div>
+      <section className="bg-[#F6F2FB]">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-16 -right-12 h-56 w-56 rounded-full bg-[#E9DFFF] blur-3xl opacity-70" />
+            <div className="absolute -bottom-10 -left-8 h-48 w-48 rounded-full bg-[#F3E7FF] blur-3xl opacity-70" />
           </div>
-        </div>
-      </section>
 
-      <section className="bg-[#F8FAFC]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-          <div className="grid gap-6 md:grid-cols-3">
-            {IMPACT_STATS.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm"
-              >
-                <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
-                <p className="text-sm text-gray-600">{stat.label}</p>
-              </div>
-            ))}
+          <div className="relative flex flex-col items-center text-center">
+            <span className="inline-flex items-center rounded-full bg-[#EADDFB] text-[#6A0DAD] px-4 py-1.5 text-[11px] font-semibold tracking-[0.3em] uppercase">
+              Archive of Progress
+            </span>
+            <h1 className="mt-6 text-4xl sm:text-5xl md:text-6xl font-bold text-[#1B0D29]">
+              The Impact Journal:
+              <span className="block text-[#6A0DAD] italic">Our Story of Change</span>
+            </h1>
+            <p className="mt-6 text-sm sm:text-base text-gray-600 max-w-2xl">
+              A chronological collection of milestones, voices, and victories in our mission to empower women and
+              girls across East Africa.
+            </p>
+          </div>
+
+          <div className="relative mt-10 flex justify-center">
+            <label className="w-full max-w-md relative flex items-center rounded-full border border-white bg-white/90 px-4 py-3 shadow-lg focus-within:border-[#6A0DAD]">
+              <Search className="h-4 w-4 text-gray-400" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search stories"
+                className="ml-3 flex-1 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none bg-transparent"
+              />
+            </label>
           </div>
         </div>
       </section>
@@ -252,6 +244,18 @@ const Impact = () => {
           ) : (
             !loading && <p className="text-sm text-gray-500">No stories found for this filter.</p>
           )}
+
+          <div className="grid gap-6 md:grid-cols-3 mb-12">
+            {IMPACT_STATS.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm"
+              >
+                <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
+                <p className="text-sm text-gray-600">{stat.label}</p>
+              </div>
+            ))}
+          </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {paginatedStories.map((story) => (

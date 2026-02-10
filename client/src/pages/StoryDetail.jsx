@@ -11,6 +11,9 @@ const cloudinaryTransform = (src, transform) => {
   return src.includes("/upload/") ? src.replace("/upload/", `/upload/${transform}/`) : src;
 };
 
+const stripHtml = (value) =>
+  value ? value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
+
 const IMPACT_SUMMARY = [
   { label: "Kits Distributed", value: "5,000+" },
   { label: "Schools Reached", value: "20" },
@@ -57,16 +60,21 @@ const StoryDetail = () => {
 
   const details = story ? IMPACT_STORY_DETAILS[story.id] : null;
 
+  const contentHtml = story?.content ?? "";
+  const usesRichText = Boolean(contentHtml && /<[^>]+>/.test(contentHtml));
+
   const narrative = useMemo(() => {
     if (!story) return [];
+    if (usesRichText) return [];
+    if (story.content) return [stripHtml(story.content)];
     if (details?.paragraphs?.length) return details.paragraphs;
-    const base = story.content ?? story.excerpt ?? "";
+    const base = story.excerpt ?? "";
     return [
       base,
       "Our teams coordinated with local partners to deliver practical resources, mentoring, and follow-up support.",
       "The program outcomes now guide future planning and inspire neighboring communities to engage.",
     ].filter(Boolean);
-  }, [details, story]);
+  }, [details, story, usesRichText]);
 
   const highlights = details?.highlights ?? [
     "Reconnected to community resources and consistent support.",
@@ -80,9 +88,9 @@ const StoryDetail = () => {
     "Follow-up visits to sustain long-term progress.",
   ];
 
-  const metaArea = details?.area ?? story?.area ?? "Community Support";
-  const metaDate = details?.date ?? "2024";
-  const metaLocation = details?.location ?? "East Africa";
+  const metaArea = story?.area ?? details?.area ?? "Community Support";
+  const metaDate = story?.date ?? details?.date ?? "2024";
+  const metaLocation = story?.location ?? details?.location ?? "East Africa";
   const readTime = "5 min read";
 
   const relatedStories = useMemo(() => {
@@ -90,10 +98,24 @@ const StoryDetail = () => {
     return base.filter((item) => item.id !== id).slice(0, 2);
   }, [stories, id]);
 
-  const heroImage = story ? cloudinaryTransform(story.imageUrl, "f_auto,q_auto,w_1600,h_900,c_fill") : "";
+  const heroImage = story ? cloudinaryTransform(story.imageUrl, "f_auto,q_auto,w_1800") : "";
   const highlightQuote =
     details?.quote ??
     "Giving Her E.V.E didn't just give education; it amplified voices. Now that voice is used to speak for those who cannot.";
+  const projectGallery = useMemo(() => {
+    if (!story) return [];
+    const fallbackPool = IMPACT_STORIES_FALLBACK.filter((item) => item.id !== story.id);
+    const pool = [story, ...fallbackPool];
+    const unique = [];
+    const seen = new Set();
+    for (const item of pool) {
+      if (!item?.imageUrl || seen.has(item.imageUrl)) continue;
+      unique.push({ src: item.imageUrl, title: item.title });
+      seen.add(item.imageUrl);
+      if (unique.length >= 6) break;
+    }
+    return unique;
+  }, [story]);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -101,12 +123,31 @@ const StoryDetail = () => {
 
       <section className="bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
-            <img
-              src={heroImage}
-              alt={story?.title ?? "Impact story"}
-              className="w-full h-72 md:h-96 object-cover"
-            />
+          <div className="pt-10 md:pt-14">
+            <p className="text-xs font-semibold tracking-[0.3em] uppercase text-[#6A0DAD] mb-3">
+              In-Depth Campaign Details
+            </p>
+          </div>
+
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mt-4">
+            <div className="relative h-[340px] sm:h-[420px] md:h-[520px] bg-[#1B0D29] overflow-hidden">
+              <img
+                src={heroImage}
+                alt={story?.title ?? "Impact story"}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-8 sm:pb-10 text-white">
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-white/80 mb-3">
+                  <span className="rounded-full bg-white/15 text-white px-3 py-1">{metaArea}</span>
+                  <span>{metaLocation}</span>
+                  <span>{metaDate}</span>
+                  <span>• {readTime}</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">{story?.title}</h1>
+                <p className="text-sm sm:text-base text-white/90 max-w-2xl">{story?.excerpt}</p>
+              </div>
+            </div>
           </div>
 
           <div className="py-8 md:py-12">
@@ -125,29 +166,44 @@ const StoryDetail = () => {
             {story && (
               <div className="mt-6 md:mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
                 <div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-gray-500 mb-3">
-                    <span className="rounded-full bg-[#F2E7FF] text-[#6A0DAD] px-3 py-1">{metaArea}</span>
-                    <span>{metaDate}</span>
-                    <span>{metaLocation}</span>
-                    <span>• {readTime}</span>
-                  </div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    {story.title}
-                  </h1>
-                  <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-6">{story.excerpt}</p>
-
                   <div className="bg-[#F8F1FF] border border-[#E5D6FF] rounded-2xl p-6 md:p-7 text-[#4B0B7A] text-lg md:text-xl font-semibold italic leading-relaxed mb-6">
                     “{highlightQuote}”
                   </div>
 
-                  <div className="space-y-5 text-gray-700 text-sm sm:text-base leading-relaxed">
-                    {narrative.map((paragraph, index) => (
-                      <p key={`paragraph-${index}`}>{paragraph}</p>
-                    ))}
-                  </div>
+                  {usesRichText ? (
+                    <div
+                      className="rich-text text-gray-700 text-sm sm:text-base leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: contentHtml }}
+                    />
+                  ) : (
+                    <div className="space-y-5 text-gray-700 text-sm sm:text-base leading-relaxed">
+                      {narrative.map((paragraph, index) => (
+                        <p key={`paragraph-${index}`}>{paragraph}</p>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="bg-[#F8F1FF] border border-[#E5D6FF] rounded-2xl p-6 md:p-7 text-[#4B0B7A] text-lg md:text-xl font-semibold italic leading-relaxed mt-8">
                     “{highlightQuote}”
+                  </div>
+
+                  <div className="mt-10">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">Project Gallery</h2>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {projectGallery.map((item, index) => (
+                        <figure
+                          key={`${item.title}-${index}`}
+                          className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm"
+                        >
+                          <img
+                            src={cloudinaryTransform(item.src, "f_auto,q_auto,w_600,h_420,c_fill")}
+                            alt={item.title}
+                            className="w-full h-40 sm:h-44 object-cover"
+                            loading="lazy"
+                          />
+                        </figure>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
