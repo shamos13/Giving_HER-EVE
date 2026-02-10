@@ -141,6 +141,9 @@ function DonationsPage(): JSX.Element {
     return values.length > 0 ? values : ["Completed", "Pending", "Failed"]
   }, [rows])
 
+  const totalAmount = useMemo(() => rows.reduce((sum, row) => sum + row.amount, 0), [rows])
+  const totalCount = useMemo(() => rows.length, [rows])
+
   function toggleSort(key: DonationSortKey) {
     if (sortBy === key) {
       setSortDirection(prev => (prev === "asc" ? "desc" : "asc"))
@@ -189,6 +192,26 @@ function DonationsPage(): JSX.Element {
           <button className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md">
             Add donation
           </button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Donations</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">${totalAmount.toLocaleString()}</p>
+          <p className="text-xs text-slate-500">All time recorded</p>
+        </div>
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Gifts</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{totalCount.toLocaleString()}</p>
+          <p className="text-xs text-slate-500">Individual donations</p>
+        </div>
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Average Gift</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">
+            ${totalCount > 0 ? Math.round(totalAmount / totalCount).toLocaleString() : 0}
+          </p>
+          <p className="text-xs text-slate-500">Based on current records</p>
         </div>
       </div>
 
@@ -658,4 +681,3 @@ type DonationCategoryFilter = "all" | DonationRow["category"]
 type DonationSortKey = "date" | "amount"
 type SortDirection = "asc" | "desc"
 type PageSize = 25 | 50 | 100
-

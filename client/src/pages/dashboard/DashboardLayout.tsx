@@ -12,7 +12,6 @@ import {
   Menu,
   Search,
   Settings,
-  Users,
   X,
 } from "lucide-react"
 
@@ -129,7 +128,6 @@ interface DashboardNavItem {
 
 const navItems: DashboardNavItem[] = [
   { label: "Overview", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Users & Volunteers", path: "/dashboard/users", icon: Users },
   { label: "Donations", path: "/dashboard/donations", icon: HandHeart },
   { label: "Programs & Services", path: "/dashboard/programs", icon: CalendarClock },
   { label: "Content Management", path: "/dashboard/content", icon: FileText },
@@ -137,4 +135,3 @@ const navItems: DashboardNavItem[] = [
   { label: "Analytics & Reports", path: "/dashboard/analytics", icon: BarChart3 },
   { label: "Settings", path: "/dashboard/settings", icon: Settings },
 ]
-

@@ -11,55 +11,32 @@ import {
   Upload,
 } from "lucide-react"
 import {
-  createAdminCampaign,
   createAdminStory,
-  deleteAdminCampaign,
   deleteAdminStory,
-  fetchAdminCampaigns,
   fetchAdminStories,
-  fetchContentSections,
   fetchSettings,
-  updateAdminCampaign,
   updateAdminStory,
-  updateContentSection,
   updateSettingsSection,
-  type CampaignDto,
-  type ContentSectionDto,
   type OrganizationDto,
+  type SponsorDto,
   type StoryDto,
 } from "../../services/api"
 
 const CONTENT_TABS = [
-  { id: "campaigns", label: "Campaigns" },
   { id: "impact", label: "Impact Stories" },
   { id: "contact", label: "Contact Info" },
-  { id: "sections", label: "Site Sections" },
+  { id: "sponsors", label: "Our Sponsors" },
 ] as const
 
 type ContentTab = (typeof CONTENT_TABS)[number]["id"]
 
 type ActiveId = string | "new"
 
+type UploadTarget = "story" | "sponsor" | null
+
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? ""
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET ?? ""
 const CLOUDINARY_ENABLED = Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET)
-
-const emptyCampaign: CampaignDto = {
-  id: "",
-  slug: "",
-  label: "",
-  title: "",
-  shortDescription: "",
-  description: "",
-  image: "",
-  raised: 0,
-  goal: 0,
-  location: "",
-  category: "",
-  status: "Draft",
-  startDate: "",
-  endDate: "",
-}
 
 const emptyStory: StoryDto = {
   id: "",
@@ -87,25 +64,10 @@ const emptyOrganization: OrganizationDto = {
   about: "",
 }
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount)
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "")
-
-const sectionPreviewMap: Record<string, string> = {
-  home: "/",
-  about: "/about",
-  success_stories: "/impact",
-  team: "/about",
+const emptySponsor: SponsorDto = {
+  id: "",
+  name: "",
+  icon: "",
 }
 
 function statusTone(status?: string) {
@@ -204,21 +166,18 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (value: 
 }
 
 function ContentPage(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<ContentTab>("campaigns")
-  const [campaigns, setCampaigns] = useState<CampaignDto[]>([])
+  const [activeTab, setActiveTab] = useState<ContentTab>("impact")
   const [stories, setStories] = useState<StoryDto[]>([])
-  const [sections, setSections] = useState<ContentSectionDto[]>([])
-  const [sectionsSnapshot, setSectionsSnapshot] = useState<ContentSectionDto[]>([])
   const [organization, setOrganization] = useState<OrganizationDto>(emptyOrganization)
-  const [activeCampaignId, setActiveCampaignId] = useState<ActiveId>("new")
-  const [activeStoryId, setActiveStoryId] = useState<ActiveId>("new")
-  const [activeSectionId, setActiveSectionId] = useState<string>("")
-  const [campaignDraft, setCampaignDraft] = useState<CampaignDto>(emptyCampaign)
-  const [storyDraft, setStoryDraft] = useState<StoryDto>(emptyStory)
   const [orgDraft, setOrgDraft] = useState<OrganizationDto>(emptyOrganization)
+  const [sponsors, setSponsors] = useState<SponsorDto[]>([])
+  const [activeStoryId, setActiveStoryId] = useState<ActiveId>("new")
+  const [activeSponsorId, setActiveSponsorId] = useState<ActiveId>("new")
+  const [storyDraft, setStoryDraft] = useState<StoryDto>(emptyStory)
+  const [sponsorDraft, setSponsorDraft] = useState<SponsorDto>(emptySponsor)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [uploadingTarget, setUploadingTarget] = useState<"campaign" | "story" | null>(null)
+  const [uploadingTarget, setUploadingTarget] = useState<UploadTarget>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -228,29 +187,23 @@ function ContentPage(): JSX.Element {
       setLoading(true)
       setError(null)
       try {
-        const [campaignData, storyData, settings, sectionData] = await Promise.all([
-          fetchAdminCampaigns(),
+        const [storyData, settings] = await Promise.all([
           fetchAdminStories(),
           fetchSettings(),
-          fetchContentSections(),
         ])
         if (cancelled) return
-        setCampaigns(campaignData)
         setStories(storyData)
-        setSections(sectionData)
-        setSectionsSnapshot(sectionData)
+        if (storyData.length > 0) {
+          setActiveStoryId(storyData[0].id)
+        }
         if (settings?.organization) {
           setOrganization(settings.organization)
           setOrgDraft(settings.organization)
         }
-        if (campaignData.length > 0) {
-          setActiveCampaignId(campaignData[0].id)
-        }
-        if (storyData.length > 0) {
-          setActiveStoryId(storyData[0].id)
-        }
-        if (sectionData.length > 0) {
-          setActiveSectionId(sectionData[0].id)
+        const sponsorItems = settings?.sponsors?.items ?? []
+        setSponsors(sponsorItems)
+        if (sponsorItems.length > 0) {
+          setActiveSponsorId(sponsorItems[0].id)
         }
       } catch (err) {
         if (!cancelled) {
@@ -269,17 +222,6 @@ function ContentPage(): JSX.Element {
   }, [])
 
   useEffect(() => {
-    if (activeCampaignId === "new") {
-      setCampaignDraft({ ...emptyCampaign })
-      return
-    }
-    const selected = campaigns.find(item => item.id === activeCampaignId)
-    if (selected) {
-      setCampaignDraft({ ...emptyCampaign, ...selected })
-    }
-  }, [activeCampaignId, campaigns])
-
-  useEffect(() => {
     if (activeStoryId === "new") {
       setStoryDraft({ ...emptyStory })
       return
@@ -290,11 +232,16 @@ function ContentPage(): JSX.Element {
     }
   }, [activeStoryId, stories])
 
-  const activeSection = sections.find(section => section.id === activeSectionId)
-
-  function handleCampaignChange<K extends keyof CampaignDto>(key: K, value: CampaignDto[K]) {
-    setCampaignDraft(prev => ({ ...prev, [key]: value }))
-  }
+  useEffect(() => {
+    if (activeSponsorId === "new") {
+      setSponsorDraft({ ...emptySponsor })
+      return
+    }
+    const selected = sponsors.find(item => item.id === activeSponsorId)
+    if (selected) {
+      setSponsorDraft({ ...emptySponsor, ...selected })
+    }
+  }, [activeSponsorId, sponsors])
 
   function handleStoryChange<K extends keyof StoryDto>(key: K, value: StoryDto[K]) {
     setStoryDraft(prev => ({ ...prev, [key]: value }))
@@ -304,49 +251,8 @@ function ContentPage(): JSX.Element {
     setOrgDraft(prev => ({ ...prev, [key]: value }))
   }
 
-  function updateSectionField(sectionId: string, fieldId: string, value: string) {
-    setSections(prev =>
-      prev.map(section =>
-        section.id === sectionId
-          ? {
-              ...section,
-              fields: section.fields.map(field => (field.id === fieldId ? { ...field, value } : field)),
-            }
-          : section,
-      ),
-    )
-  }
-
-  async function saveCampaign(status: "Draft" | "Active") {
-    if (!campaignDraft.title.trim()) {
-      setError("Campaign title is required.")
-      return
-    }
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
-    try {
-      const payload: Partial<CampaignDto> = {
-        ...campaignDraft,
-        status,
-        slug: campaignDraft.slug?.trim() ? campaignDraft.slug : slugify(campaignDraft.title),
-      }
-      let saved: CampaignDto
-      if (activeCampaignId === "new" || !campaignDraft.id) {
-        saved = await createAdminCampaign(payload)
-        setCampaigns(prev => [saved, ...prev])
-        setActiveCampaignId(saved.id)
-      } else {
-        saved = await updateAdminCampaign(campaignDraft.id, payload)
-        setCampaigns(prev => prev.map(item => (item.id === saved.id ? saved : item)))
-      }
-      setCampaignDraft({ ...emptyCampaign, ...saved })
-      setSuccess("Campaign saved.")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save campaign")
-    } finally {
-      setSaving(false)
-    }
+  function handleSponsorChange<K extends keyof SponsorDto>(key: K, value: SponsorDto[K]) {
+    setSponsorDraft(prev => ({ ...prev, [key]: value }))
   }
 
   async function saveStory(status: "Draft" | "Published") {
@@ -396,38 +302,31 @@ function ContentPage(): JSX.Element {
     }
   }
 
-  async function saveSection(section: ContentSectionDto, status?: string) {
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
-    try {
-      const updated = await updateContentSection(section.id, {
-        fields: section.fields,
-        status: status ?? section.status,
-      })
-      setSections(prev => prev.map(item => (item.id === updated.id ? updated : item)))
-      setSectionsSnapshot(prev => prev.map(item => (item.id === updated.id ? updated : item)))
-      setSuccess("Section saved.")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save section")
-    } finally {
-      setSaving(false)
+  async function saveSponsor() {
+    if (!sponsorDraft.name.trim()) {
+      setError("Sponsor name is required.")
+      return
     }
-  }
-
-  async function handleDeleteCampaign(id: string) {
-    const ok = window.confirm("Delete this campaign? This cannot be undone.")
-    if (!ok) return
     setSaving(true)
     setError(null)
     setSuccess(null)
     try {
-      await deleteAdminCampaign(id)
-      setCampaigns(prev => prev.filter(item => item.id !== id))
-      setActiveCampaignId("new")
-      setSuccess("Campaign deleted.")
+      const nextId = sponsorDraft.id || `sponsor-${Date.now()}`
+      const nextSponsor: SponsorDto = {
+        ...sponsorDraft,
+        id: nextId,
+      }
+      const nextSponsors = activeSponsorId === "new"
+        ? [nextSponsor, ...sponsors]
+        : sponsors.map(item => (item.id === nextId ? nextSponsor : item))
+      const updated = await updateSettingsSection("sponsors", { items: nextSponsors })
+      const updatedItems = updated.items ?? nextSponsors
+      setSponsors(updatedItems)
+      setActiveSponsorId(nextId)
+      setSponsorDraft(nextSponsor)
+      setSuccess("Sponsor saved.")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete campaign")
+      setError(err instanceof Error ? err.message : "Failed to save sponsor")
     } finally {
       setSaving(false)
     }
@@ -451,16 +350,36 @@ function ContentPage(): JSX.Element {
     }
   }
 
-  async function handleImageUpload(file: File, target: "campaign" | "story") {
+  async function handleDeleteSponsor(id: string) {
+    const ok = window.confirm("Delete this sponsor? This cannot be undone.")
+    if (!ok) return
+    setSaving(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const nextSponsors = sponsors.filter(item => item.id !== id)
+      const updated = await updateSettingsSection("sponsors", { items: nextSponsors })
+      setSponsors(updated.items ?? nextSponsors)
+      setActiveSponsorId("new")
+      setSponsorDraft({ ...emptySponsor })
+      setSuccess("Sponsor deleted.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete sponsor")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleImageUpload(file: File, target: "story" | "sponsor") {
     setUploadingTarget(target)
     setError(null)
     setSuccess(null)
     try {
       const url = await uploadImage(file)
-      if (target === "campaign") {
-        setCampaignDraft(prev => ({ ...prev, image: url }))
-      } else {
+      if (target === "story") {
         setStoryDraft(prev => ({ ...prev, imageUrl: url }))
+      } else {
+        setSponsorDraft(prev => ({ ...prev, icon: url }))
       }
       setSuccess("Image uploaded.")
     } catch (err) {
@@ -475,17 +394,13 @@ function ContentPage(): JSX.Element {
     window.open(target, "_blank", "noopener,noreferrer")
   }
 
-  const campaignProgress = useMemo(() => {
-    const goal = Number(campaignDraft.goal || 0)
-    const raised = Number(campaignDraft.raised || 0)
-    return goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0
-  }, [campaignDraft.goal, campaignDraft.raised])
-
-  const campaignPreviewPath =
-    campaignDraft.id && campaignDraft.status !== "Draft" ? `/campaigns/${campaignDraft.id}` : "/campaigns"
   const storyPreviewPath =
     storyDraft.id && storyDraft.status === "Published" ? `/impact/${storyDraft.id}` : "/impact"
-  const sectionPreviewPath = activeSectionId ? sectionPreviewMap[activeSectionId] ?? "/" : "/"
+
+  const sponsorPreviewItems = useMemo(
+    () => (activeSponsorId === "new" ? [sponsorDraft, ...sponsors] : sponsors),
+    [activeSponsorId, sponsorDraft, sponsors],
+  )
 
   return (
     <div className="space-y-5">
@@ -494,7 +409,7 @@ function ContentPage(): JSX.Element {
           <div>
             <p className="text-sm font-semibold text-white/70">Giving Her E.V.E Admin</p>
             <p className="text-xl font-semibold">Content Studio</p>
-            <p className="text-xs text-white/70">Manage campaigns, impact stories, contact info, and site sections</p>
+            <p className="text-xs text-white/70">Manage impact stories, contact info, and sponsor highlights</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -502,10 +417,6 @@ function ContentPage(): JSX.Element {
               onClick={() => {
                 setError(null)
                 setSuccess(null)
-                if (activeTab === "campaigns") {
-                  const active = campaigns.find(item => item.id === activeCampaignId)
-                  setCampaignDraft(active ? { ...emptyCampaign, ...active } : { ...emptyCampaign })
-                }
                 if (activeTab === "impact") {
                   const active = stories.find(item => item.id === activeStoryId)
                   setStoryDraft(active ? { ...emptyStory, ...active } : { ...emptyStory })
@@ -513,35 +424,18 @@ function ContentPage(): JSX.Element {
                 if (activeTab === "contact") {
                   setOrgDraft(organization)
                 }
-                if (activeTab === "sections") {
-                  setSections(sectionsSnapshot)
+                if (activeTab === "sponsors") {
+                  const active = sponsors.find(item => item.id === activeSponsorId)
+                  setSponsorDraft(active ? { ...emptySponsor, ...active } : { ...emptySponsor })
                 }
               }}
             >
               Cancel
             </button>
-            {activeTab === "campaigns" && (
-              <button
-                className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-                onClick={() => saveCampaign("Draft")}
-                disabled={saving}
-              >
-                Save as Draft
-              </button>
-            )}
             {activeTab === "impact" && (
               <button
                 className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
                 onClick={() => saveStory("Draft")}
-                disabled={saving}
-              >
-                Save as Draft
-              </button>
-            )}
-            {activeTab === "sections" && activeSection && (
-              <button
-                className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-                onClick={() => saveSection(activeSection, "Draft")}
                 disabled={saving}
               >
                 Save as Draft
@@ -555,18 +449,18 @@ function ContentPage(): JSX.Element {
               >
                 Save Changes
               </button>
-            ) : activeTab === "sections" ? (
+            ) : activeTab === "sponsors" ? (
               <button
                 className="rounded-full bg-[#F5C542] px-4 py-2 text-sm font-semibold text-[#3B2500] hover:bg-[#F3B928]"
-                onClick={() => activeSection && saveSection(activeSection, "Published")}
-                disabled={saving || !activeSection}
+                onClick={saveSponsor}
+                disabled={saving}
               >
-                Publish Changes
+                Save Sponsor
               </button>
             ) : (
               <button
                 className="rounded-full bg-[#F5C542] px-4 py-2 text-sm font-semibold text-[#3B2500] hover:bg-[#F3B928]"
-                onClick={() => (activeTab === "campaigns" ? saveCampaign("Active") : saveStory("Published"))}
+                onClick={() => saveStory("Published")}
                 disabled={saving}
               >
                 Publish Changes
@@ -590,18 +484,7 @@ function ContentPage(): JSX.Element {
         ))}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Campaigns</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{campaigns.length}</p>
-          <p className="text-xs text-slate-500">Available items</p>
-          <div className="mt-3 space-y-1 text-xs text-slate-600">
-            {campaigns.slice(0, 4).map(item => (
-              <p key={item.id} className="truncate">{item.title}</p>
-            ))}
-            {campaigns.length > 4 && <p className="text-slate-400">+{campaigns.length - 4} more</p>}
-          </div>
-        </div>
+      <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Impact Stories</p>
           <p className="mt-2 text-2xl font-bold text-slate-900">{stories.length}</p>
@@ -616,7 +499,7 @@ function ContentPage(): JSX.Element {
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contact Info</p>
           <p className="mt-2 text-2xl font-bold text-slate-900">3</p>
-          <p className="text-xs text-slate-500">Available fields</p>
+          <p className="text-xs text-slate-500">Key fields</p>
           <div className="mt-3 space-y-1 text-xs text-slate-600">
             <p className="truncate">{orgDraft.email || "Email"}</p>
             <p className="truncate">{orgDraft.phone || "Phone"}</p>
@@ -624,14 +507,14 @@ function ContentPage(): JSX.Element {
           </div>
         </div>
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Site Sections</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{sections.length}</p>
-          <p className="text-xs text-slate-500">Available sections</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sponsors</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{sponsors.length}</p>
+          <p className="text-xs text-slate-500">Listed partners</p>
           <div className="mt-3 space-y-1 text-xs text-slate-600">
-            {sections.slice(0, 4).map(item => (
+            {sponsors.slice(0, 4).map(item => (
               <p key={item.id} className="truncate">{item.name}</p>
             ))}
-            {sections.length > 4 && <p className="text-slate-400">+{sections.length - 4} more</p>}
+            {sponsors.length > 4 && <p className="text-slate-400">+{sponsors.length - 4} more</p>}
           </div>
         </div>
       </div>
@@ -639,261 +522,6 @@ function ContentPage(): JSX.Element {
       {loading && <p className="text-xs text-slate-500">Loading content workspace...</p>}
       {error && <p className="text-xs text-rose-600">Error: {error}</p>}
       {success && <p className="text-xs text-emerald-600">{success}</p>}
-
-      {activeTab === "campaigns" && (
-        <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
-          <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Campaigns</p>
-              <button
-                className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white"
-                onClick={() => setActiveCampaignId("new")}
-              >
-                <Plus size={12} />
-                New
-              </button>
-            </div>
-            <p className="mt-1 text-xs text-slate-500">Select a campaign to edit</p>
-            <div className="mt-3 space-y-2">
-              {campaigns.map(item => (
-                <button
-                  key={item.id}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
-                    activeCampaignId === item.id
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100"
-                  }`}
-                  onClick={() => setActiveCampaignId(item.id)}
-                >
-                  <span className="truncate">{item.title}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] ${statusTone(item.status)}`}>{item.status ?? "Draft"}</span>
-                </button>
-              ))}
-              {campaigns.length === 0 && <p className="text-xs text-slate-500">No campaigns yet.</p>}
-            </div>
-          </aside>
-
-          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Edit Campaign Content</p>
-                <p className="text-xs text-slate-500">Structured like a blog post with live preview.</p>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusTone(campaignDraft.status)}`}>
-                {campaignDraft.status || "Draft"}
-              </span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Campaign Title</label>
-                <input
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                  value={campaignDraft.title}
-                  onChange={event => handleCampaignChange("title", event.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Short Description</label>
-                <textarea
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                  rows={2}
-                  value={campaignDraft.shortDescription}
-                  onChange={event => handleCampaignChange("shortDescription", event.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Full Description</label>
-                <textarea
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                  rows={4}
-                  value={campaignDraft.description}
-                  onChange={event => handleCampaignChange("description", event.target.value)}
-                />
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Category</label>
-                  <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    value={campaignDraft.category}
-                    onChange={event => handleCampaignChange("category", event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Location</label>
-                  <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    value={campaignDraft.location}
-                    onChange={event => handleCampaignChange("location", event.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Goal Amount (USD)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    value={campaignDraft.goal}
-                    onChange={event => handleCampaignChange("goal", Number(event.target.value || 0))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Raised So Far (USD)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    value={campaignDraft.raised}
-                    onChange={event => handleCampaignChange("raised", Number(event.target.value || 0))}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Label</label>
-                  <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    value={campaignDraft.label ?? ""}
-                    onChange={event => handleCampaignChange("label", event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Slug</label>
-                  <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    value={campaignDraft.slug ?? ""}
-                    onChange={event => handleCampaignChange("slug", event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Status</label>
-                  <select
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
-                    value={campaignDraft.status ?? "Draft"}
-                    onChange={event => handleCampaignChange("status", event.target.value)}
-                  >
-                    <option value="Draft">Draft</option>
-                    <option value="Active">Active</option>
-                    <option value="Paused">Paused</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">Start Date</label>
-                  <input
-                    type="date"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
-                    value={campaignDraft.startDate ?? ""}
-                    onChange={event => handleCampaignChange("startDate", event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700">End Date</label>
-                  <input
-                    type="date"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
-                    value={campaignDraft.endDate ?? ""}
-                    onChange={event => handleCampaignChange("endDate", event.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Image URL</label>
-                <input
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                  value={campaignDraft.image}
-                  onChange={event => handleCampaignChange("image", event.target.value)}
-                />
-                <div className="mt-2 flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                  <Upload className="mx-auto" size={18} />
-                  <p>Upload a new campaign image</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={event => {
-                      const file = event.target.files?.[0]
-                      if (!file) return
-                      void handleImageUpload(file, "campaign")
-                    }}
-                    disabled={!CLOUDINARY_ENABLED || uploadingTarget === "campaign"}
-                    className="text-xs"
-                  />
-                  {uploadingTarget === "campaign" && <p className="text-[11px] text-slate-500">Uploading image...</p>}
-                  {!CLOUDINARY_ENABLED && (
-                    <p className="text-[11px] text-amber-600">
-                      Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to enable uploads.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {campaignDraft.id && (
-              <div className="mt-4 flex items-center gap-2">
-                <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-rose-600 shadow-sm ring-1 ring-rose-200 hover:bg-rose-50"
-                  onClick={() => handleDeleteCampaign(campaignDraft.id)}
-                  disabled={saving}
-                >
-                  <Trash2 size={14} />
-                  Delete campaign
-                </button>
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Live Preview: Public Website Card</p>
-              <button
-                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
-                onClick={() => openPreview(campaignPreviewPath)}
-              >
-                <ExternalLink size={14} />
-                Preview
-              </button>
-            </div>
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white shadow-lg">
-              <div className="aspect-[16/10] w-full overflow-hidden rounded-t-2xl bg-slate-100">
-                {campaignDraft.image ? (
-                  <img src={campaignDraft.image} alt={campaignDraft.title} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-slate-400">
-                    <ImageIcon />
-                  </div>
-                )}
-              </div>
-              <div className="p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{campaignDraft.category || "Campaign"}</p>
-                <h3 className="mt-2 text-lg font-semibold text-[#4B0B7A]">{campaignDraft.title || "Campaign title"}</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  {campaignDraft.shortDescription || "Short description of the campaign."}
-                </p>
-                <div className="mt-4">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{formatCurrency(Number(campaignDraft.raised || 0))} raised</span>
-                    <span>{formatCurrency(Number(campaignDraft.goal || 0))} goal</span>
-                  </div>
-                  <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-[#5E1B77] to-[#7F19E6]"
-                      style={{ width: `${campaignProgress}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">{campaignProgress}% funded</p>
-                </div>
-                <button className="mt-4 w-full rounded-full bg-[#F5C542] px-4 py-2 text-sm font-semibold text-[#3B2500]">
-                  Donate Now
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
 
       {activeTab === "impact" && (
         <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
@@ -1245,89 +873,140 @@ function ContentPage(): JSX.Element {
         </div>
       )}
 
-      {activeTab === "sections" && (
+      {activeTab === "sponsors" && (
         <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
           <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <p className="text-sm font-semibold text-slate-900">Site Sections</p>
-            <p className="mt-1 text-xs text-slate-500">Select a site section to edit</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Sponsors</p>
+              <button
+                className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white"
+                onClick={() => setActiveSponsorId("new")}
+              >
+                <Plus size={12} />
+                New
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Select a sponsor to edit</p>
             <div className="mt-3 space-y-2">
-              {sections.map(section => (
+              {sponsors.map(item => (
                 <button
-                  key={section.id}
+                  key={item.id}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
-                    activeSectionId === section.id
+                    activeSponsorId === item.id
                       ? "bg-slate-900 text-white"
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                   }`}
-                  onClick={() => setActiveSectionId(section.id)}
+                  onClick={() => setActiveSponsorId(item.id)}
                 >
-                  <span className="truncate">{section.name}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] ${statusTone(section.status)}`}>{section.status ?? "Draft"}</span>
+                  <span className="truncate">{item.name}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] ${item.icon ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-700"}`}>
+                    {item.icon ? "Icon" : "Name"}
+                  </span>
                 </button>
               ))}
-              {sections.length === 0 && <p className="text-xs text-slate-500">No sections available.</p>}
+              {sponsors.length === 0 && <p className="text-xs text-slate-500">No sponsors yet.</p>}
             </div>
           </aside>
 
           <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            {activeSection ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Edit Section Content</p>
-                    <p className="text-xs text-slate-500">{activeSection.description}</p>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusTone(activeSection.status)}`}>
-                    {activeSection.status || "Draft"}
-                  </span>
-                </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Edit Sponsor</p>
+                <p className="text-xs text-slate-500">Add a name and optional icon.</p>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${sponsorDraft.icon ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                {sponsorDraft.icon ? "Icon set" : "Name only"}
+              </span>
+            </div>
 
-                <div className="mt-4 space-y-3">
-                  {activeSection.fields.map(field => (
-                    <div key={field.id} className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-700">{field.label}</label>
-                      {field.type === "textarea" ? (
-                        <textarea
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                          rows={field.rows ?? 3}
-                          value={field.value}
-                          onChange={event => updateSectionField(activeSection.id, field.id, event.target.value)}
-                        />
-                      ) : (
-                        <input
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                          value={field.value}
-                          onChange={event => updateSectionField(activeSection.id, field.id, event.target.value)}
-                        />
-                      )}
-                    </div>
-                  ))}
+            <div className="mt-4 space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Sponsor Name</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                  value={sponsorDraft.name}
+                  onChange={event => handleSponsorChange("name", event.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Icon URL (optional)</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                  value={sponsorDraft.icon ?? ""}
+                  onChange={event => handleSponsorChange("icon", event.target.value)}
+                />
+                <div className="mt-2 flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
+                  <Upload className="mx-auto" size={18} />
+                  <p>Upload a sponsor icon</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={event => {
+                      const file = event.target.files?.[0]
+                      if (!file) return
+                      void handleImageUpload(file, "sponsor")
+                    }}
+                    disabled={!CLOUDINARY_ENABLED || uploadingTarget === "sponsor"}
+                    className="text-xs"
+                  />
+                  {uploadingTarget === "sponsor" && <p className="text-[11px] text-slate-500">Uploading icon...</p>}
+                  {!CLOUDINARY_ENABLED && (
+                    <p className="text-[11px] text-amber-600">
+                      Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to enable uploads.
+                    </p>
+                  )}
                 </div>
-              </>
-            ) : (
-              <p className="text-sm text-slate-500">Select a section to edit.</p>
+              </div>
+            </div>
+
+            {sponsorDraft.id && (
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-rose-600 shadow-sm ring-1 ring-rose-200 hover:bg-rose-50"
+                  onClick={() => handleDeleteSponsor(sponsorDraft.id)}
+                  disabled={saving}
+                >
+                  <Trash2 size={14} />
+                  Delete sponsor
+                </button>
+              </div>
             )}
           </section>
 
           <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Available Data</p>
+              <p className="text-sm font-semibold text-slate-900">Live Preview: Partner Strip</p>
               <button
                 className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
-                onClick={() => openPreview(sectionPreviewPath)}
+                onClick={() => openPreview("/campaigns")}
               >
                 <ExternalLink size={14} />
                 Preview
               </button>
             </div>
-            <div className="mt-4 space-y-3">
-              {activeSection?.fields.map(field => (
-                <div key={field.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold text-slate-500">{field.label}</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">{field.value || "Not set"}</p>
-                </div>
-              ))}
-              {!activeSection && <p className="text-sm text-slate-500">No section selected.</p>}
+            <div className="mt-4 rounded-2xl bg-gradient-to-r from-[#7A2BCB] via-[#8F3CD6] to-[#B066EA] p-4 text-white">
+              <p className="text-center text-[10px] uppercase tracking-[0.3em] text-white/70">
+                Trusted by our supporters
+              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-white/80 text-sm font-semibold">
+                {sponsorPreviewItems.filter(item => item.name || item.icon).map(item => (
+                  <span
+                    key={item.id || item.name}
+                    className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2"
+                  >
+                    {item.icon && item.name ? (
+                      <img src={item.icon} alt={item.name} className="h-5 w-auto" />
+                    ) : (
+                      <span>{item.name || "Sponsor"}</span>
+                    )}
+                  </span>
+                ))}
+                {sponsorPreviewItems.length === 0 && (
+                  <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs">
+                    Add sponsors to see them here.
+                  </span>
+                )}
+              </div>
             </div>
           </section>
         </div>
