@@ -202,6 +202,11 @@ app.get("/api/organization", async (_req, res) => {
   res.json(db.settings?.organization || {});
 });
 
+app.get("/api/sponsors", async (_req, res) => {
+  const db = await readDb();
+  res.json(db.settings?.sponsors?.items || []);
+});
+
 app.get("/api/testimonials", async (_req, res) => {
   const db = await readDb();
   const testimonials = (db.testimonials || []).filter(testimonial => testimonial.status === "Published");
