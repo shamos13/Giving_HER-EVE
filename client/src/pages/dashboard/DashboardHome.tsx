@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   BarChart3,
   HandHeart,
+  Mail,
   Megaphone,
   Pencil,
   UserCheck,
