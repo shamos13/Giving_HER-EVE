@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { ShieldCheck, Smartphone, UserCog, CreditCard, Banknote, Users, Bell, Lock, Globe } from "lucide-react"
+import { toast } from "react-toastify"
 import { fetchSettings, updateSettingsSection, type SettingsDto } from "../../services/api"
 
 const defaultAdminAlerts = {
@@ -299,8 +300,7 @@ function SettingsPage(): JSX.Element {
                 <button
                   className="mt-3 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                   onClick={() => {
-                    // eslint-disable-next-line no-alert
-                    alert("M-Pesa connection test will be wired to backend.")
+                    toast.info("M-Pesa connection test will be wired to backend.")
                   }}
                 >
                   Test connection
@@ -340,8 +340,7 @@ function SettingsPage(): JSX.Element {
                 <button
                   className="mt-3 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                   onClick={() => {
-                    // eslint-disable-next-line no-alert
-                    alert("PayPal connection test will be wired to backend.")
+                    toast.info("PayPal connection test will be wired to backend.")
                   }}
                 >
                   Test connection
@@ -539,8 +538,7 @@ function SettingsPage(): JSX.Element {
                       <button
                         className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:shadow-md"
                         onClick={() => {
-                          // eslint-disable-next-line no-alert
-                          alert("User invitations will be wired to backend.")
+                          toast.info("User invitations will be wired to backend.")
                           setShowAddUser(false)
                         }}
                       >
@@ -640,8 +638,7 @@ function SettingsPage(): JSX.Element {
                   <button
                     className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
                     onClick={() => {
-                      // eslint-disable-next-line no-alert
-                      alert("Template editor will open in a dedicated screen.")
+                      toast.info("Template editor will open in a dedicated screen.")
                     }}
                   >
                     Open template editor
@@ -682,8 +679,7 @@ function SettingsPage(): JSX.Element {
                 <button
                   className="mt-3 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                   onClick={() => {
-                    // eslint-disable-next-line no-alert
-                    alert("Password change will be wired to backend.")
+                    toast.info("Password change will be wired to backend.")
                   }}
                 >
                   Update password
@@ -748,8 +744,7 @@ function SettingsPage(): JSX.Element {
                     <button
                       className="mt-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                       onClick={() => {
-                        // eslint-disable-next-line no-alert
-                        alert("Session revocation will be wired to backend.")
+                        toast.info("Session revocation will be wired to backend.")
                       }}
                     >
                       Log out all sessions
@@ -928,4 +923,3 @@ interface SeedUser {
   status: "Active" | "Inactive" | string
   lastActive: string
 }
-

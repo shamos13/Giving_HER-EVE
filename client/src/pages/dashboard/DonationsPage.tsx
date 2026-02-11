@@ -13,6 +13,7 @@ import {
   Info,
   X,
 } from "lucide-react"
+import { toast } from "react-toastify"
 import {
   fetchDonations,
   downloadDonationReport,
@@ -181,8 +182,7 @@ function DonationsPage(): JSX.Element {
               try {
                 await downloadDonationReport("xlsx")
               } catch (e) {
-                // eslint-disable-next-line no-alert
-                alert(e instanceof Error ? e.message : "Failed to export report")
+                toast.error(e instanceof Error ? e.message : "Failed to export report")
               }
             }}
           >
@@ -332,8 +332,7 @@ function DonationsPage(): JSX.Element {
                       <button
                         className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                         onClick={() => {
-                          // eslint-disable-next-line no-alert
-                          alert("Receipt download for a single donation will be wired to the backend.")
+                          toast.info("Receipt download for a single donation will be wired to the backend.")
                         }}
                       >
                         Receipt
@@ -381,8 +380,7 @@ function DonationsPage(): JSX.Element {
                             <button
                               className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                               onClick={() => {
-                                // eslint-disable-next-line no-alert
-                                alert("Thank-you email will be sent via backend integration.")
+                                toast.info("Thank-you email will be sent via backend integration.")
                               }}
                             >
                               <Mail size={14} />
@@ -594,9 +592,9 @@ function DonationsPage(): JSX.Element {
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(selectedDonation.reference)
+                      toast.success("Payment reference copied.")
                     } catch {
-                      // eslint-disable-next-line no-alert
-                      alert("Could not copy to clipboard.")
+                      toast.error("Could not copy to clipboard.")
                     }
                   }}
                 >
@@ -617,8 +615,7 @@ function DonationsPage(): JSX.Element {
               <button
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                 onClick={() => {
-                  // eslint-disable-next-line no-alert
-                  alert("Receipt download will be implemented with backend endpoint.")
+                  toast.info("Receipt download will be implemented with backend endpoint.")
                 }}
               >
                 <Download size={14} />
@@ -627,8 +624,7 @@ function DonationsPage(): JSX.Element {
               <button
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:shadow-md"
                 onClick={() => {
-                  // eslint-disable-next-line no-alert
-                  alert("Thank-you email sending will be wired to backend.")
+                  toast.info("Thank-you email sending will be wired to backend.")
                 }}
               >
                 <HandHeart size={14} />

@@ -327,48 +327,7 @@
       "status": "Paused"
     }
   ],
-  "messages": [
-    {
-      "id": "m1",
-      "name": "Adaeze Chukwu",
-      "email": "ada@helper.com",
-      "type": "Volunteer",
-      "preview": "Available weekends, interested in the shelter program...",
-      "message": "Available weekends, interested in the shelter program. Please share next steps and any onboarding materials.",
-      "status": "New",
-      "createdAt": "2025-12-02T11:20:00.000Z"
-    },
-    {
-      "id": "m2",
-      "name": "Grace Daniels",
-      "email": "grace@foundation.org",
-      "type": "Donation",
-      "preview": "Please confirm our November wire receipt...",
-      "message": "Please confirm our November wire receipt and share the official acknowledgment letter.",
-      "status": "In progress",
-      "createdAt": "2025-12-01T09:05:00.000Z"
-    },
-    {
-      "id": "m3",
-      "name": "Leo Adebisi",
-      "email": "leo@partners.io",
-      "type": "Partnership",
-      "preview": "Can we co-host the January awareness event?",
-      "message": "Can we co-host the January awareness event? Happy to discuss logistics and promotion.",
-      "status": "Resolved",
-      "createdAt": "2025-12-01T08:30:00.000Z"
-    },
-    {
-      "id": "m4",
-      "name": "Sarah Bello",
-      "email": "sarah@community.ng",
-      "type": "General",
-      "preview": "Requesting brochures for our community center...",
-      "message": "Requesting brochures for our community center. Please advise how to receive printed materials.",
-      "status": "New",
-      "createdAt": "2025-11-30T15:15:00.000Z"
-    }
-  ],
+  "messages": [],
   "users": [
     {
       "id": "u1",
@@ -541,7 +500,7 @@
       "name": "Giving Her E.V.E",
       "tagline": "Empowering vulnerable women through support and advocacy.",
       "website": "https://givinghereve.org",
-      "email": "hello@givinghereve.org",
+      "email": "amosprosper214@gmail.com",
       "phone": "+254 700 000 000",
       "address": "Nairobi, Kenya",
       "facebook": "https://facebook.com/givinghereve",
