@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchSponsors } from "../services/api";
+import { fetchSponsors, isRecoverableApiError } from "../services/api";
+import { getResponsiveImage } from "../utils/image";
 
 const fallbackSponsors = [
   { id: "fallback-1", name: "Shopify", icon: "" },
@@ -11,19 +12,36 @@ const fallbackSponsors = [
 ];
 
 const PartnerStrip = () => {
-  const [sponsors, setSponsors] = useState(fallbackSponsors);
+  const [sponsors, setSponsors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [useFallbackSponsors, setUseFallbackSponsors] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      setLoading(true);
+      setError(null);
+      setUseFallbackSponsors(false);
       try {
         const data = await fetchSponsors();
         if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
           setSponsors(data);
+        } else {
+          setSponsors([]);
         }
-      } catch {
-        // Keep fallback list on error.
+      } catch (err) {
+        if (!cancelled) {
+          const recoverable = isRecoverableApiError(err);
+          setSponsors(recoverable ? fallbackSponsors : []);
+          setUseFallbackSponsors(recoverable);
+          setError(recoverable ? null : "Unable to load sponsors right now.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
     void load();
@@ -41,23 +59,52 @@ const PartnerStrip = () => {
           Trusted by our supporters
         </p>
         <div className="flex flex-wrap items-center justify-center gap-6 text-white/80 text-sm font-semibold">
-          {visibleSponsors.map((partner) => (
-            <span
-              key={partner.id || partner.name}
-              className="px-4 py-2 rounded-full bg-white/10 border border-white/15 inline-flex items-center justify-center"
-            >
-              {partner.icon && partner.name ? (
-                <img
-                  src={partner.icon}
-                  alt={partner.name}
-                  className="h-5 w-auto"
-                />
-              ) : (
-                partner.name
-              )}
+          {loading && (
+            <span className="px-4 py-2 rounded-full bg-white/10 border border-white/15">
+              Loading sponsors...
             </span>
-          ))}
-          {visibleSponsors.length === 0 && (
+          )}
+          {!loading && error && (
+            <span className="px-4 py-2 rounded-full bg-white/10 border border-white/15">
+              Sponsors unavailable right now
+            </span>
+          )}
+          {!loading && useFallbackSponsors && (
+            <span className="px-4 py-2 rounded-full bg-white/10 border border-white/15">
+              Fallback sponsors
+            </span>
+          )}
+          {visibleSponsors.map((partner) => {
+            const logo = getResponsiveImage(partner.icon, {
+              widths: [80, 120, 160],
+              sizes: "80px",
+              crop: "fit",
+            });
+
+            return (
+              <span
+                key={partner.id || partner.name}
+                className="px-4 py-2 rounded-full bg-white/10 border border-white/15 inline-flex items-center justify-center"
+              >
+                {partner.icon && partner.name ? (
+                  <img
+                    src={logo.src}
+                    srcSet={logo.srcSet}
+                    sizes={logo.sizes}
+                    alt={partner.name}
+                    className="h-5 w-auto"
+                    loading="lazy"
+                    decoding="async"
+                    width={160}
+                    height={64}
+                  />
+                ) : (
+                  partner.name
+                )}
+              </span>
+            );
+          })}
+          {!loading && !error && visibleSponsors.length === 0 && (
             <span className="px-4 py-2 rounded-full bg-white/10 border border-white/15">
               Sponsors coming soon
             </span>

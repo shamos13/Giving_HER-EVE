@@ -4,6 +4,7 @@ import {
   ExternalLink,
   FileText,
   ImageIcon,
+  Loader2,
   Pencil,
   Plus,
   Save,
@@ -11,20 +12,27 @@ import {
   Upload,
 } from "lucide-react"
 import {
+  createAdminTeamMember,
   createAdminStory,
+  deleteAdminTeamMember,
   deleteAdminStory,
+  fetchAdminTeam,
   fetchAdminStories,
   fetchSettings,
+  uploadAdminImage,
+  updateAdminTeamMember,
   updateAdminStory,
   updateSettingsSection,
   type OrganizationDto,
   type SponsorDto,
   type StoryDto,
+  type TeamMemberDto,
 } from "../../services/api"
 
 const CONTENT_TABS = [
   { id: "impact", label: "Impact Stories" },
   { id: "contact", label: "Contact Info" },
+  { id: "team", label: "Team" },
   { id: "sponsors", label: "Our Sponsors" },
 ] as const
 
@@ -32,11 +40,14 @@ type ContentTab = (typeof CONTENT_TABS)[number]["id"]
 
 type ActiveId = string | "new"
 
-type UploadTarget = "story" | "sponsor" | null
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? ""
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET ?? ""
-const CLOUDINARY_ENABLED = Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET)
+type UploadTarget = "storyMain" | "storyGallery" | "sponsor" | "team" | null
+type UploadPreviewTarget = Exclude<UploadTarget, null>
+type UploadPreviewMap = Partial<Record<UploadPreviewTarget, string>>
+type StoryGalleryUploadThumb = {
+  id: string
+  previewUrl: string
+  fileName: string
+}
 
 const emptyStory: StoryDto = {
   id: "",
@@ -44,6 +55,7 @@ const emptyStory: StoryDto = {
   excerpt: "",
   content: "",
   imageUrl: "",
+  galleryImages: [],
   status: "Draft",
   campaignId: "",
   area: "",
@@ -70,30 +82,18 @@ const emptySponsor: SponsorDto = {
   icon: "",
 }
 
+const emptyTeamMember: TeamMemberDto = {
+  id: "",
+  name: "",
+  role: "",
+  photo: "",
+}
+
 function statusTone(status?: string) {
   if (!status) return "bg-slate-100 text-slate-600"
   if (status === "Active" || status === "Published") return "bg-emerald-100 text-emerald-700"
   if (status === "Draft") return "bg-amber-100 text-amber-700"
   return "bg-slate-100 text-slate-600"
-}
-
-async function uploadImage(file: File): Promise<string> {
-  if (!CLOUDINARY_ENABLED) {
-    throw new Error("Cloudinary upload is not configured.")
-  }
-  const formData = new FormData()
-  formData.append("file", file)
-  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET)
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`, {
-    method: "POST",
-    body: formData,
-  })
-  const data = await res.json()
-  if (!res.ok) {
-    const message = data?.error?.message ?? "Image upload failed"
-    throw new Error(message)
-  }
-  return data.secure_url || data.url
 }
 
 function RichTextEditor({ value, onChange }: { value: string; onChange: (value: string) => void }): JSX.Element {
@@ -165,21 +165,180 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (value: 
   )
 }
 
+function ImageUploadDropzone({
+  placeholder,
+  previewUrl,
+  previewSize,
+  disabled,
+  uploading,
+  multiple,
+  onFilesSelected,
+}: {
+  placeholder: string
+  previewUrl?: string
+  previewSize?: "compact" | "main"
+  disabled?: boolean
+  uploading?: boolean
+  multiple?: boolean
+  onFilesSelected: (files: FileList | null) => void
+}): JSX.Element {
+  const [dragActive, setDragActive] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  const openFileExplorer = () => {
+    if (disabled) return
+    inputRef.current?.click()
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (disabled) return
+    setDragActive(false)
+    onFilesSelected(event.dataTransfer.files)
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled}
+      onClick={openFileExplorer}
+      onKeyDown={event => {
+        if (disabled) return
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          openFileExplorer()
+        }
+      }}
+      onDragOver={event => {
+        event.preventDefault()
+        if (!disabled) setDragActive(true)
+      }}
+      onDragLeave={event => {
+        event.preventDefault()
+        setDragActive(false)
+      }}
+      onDrop={handleDrop}
+      className={`group mt-2 cursor-pointer rounded-xl border transition ${
+        disabled
+          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+          : dragActive
+            ? "border-[#6A0DAD] bg-[#F8F1FF] text-[#4B0B7A]"
+            : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:bg-slate-100"
+      } ${previewUrl ? "overflow-hidden" : "border-dashed p-4 text-center text-xs"}`}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple={Boolean(multiple)}
+        className="hidden"
+        onChange={event => {
+          onFilesSelected(event.target.files)
+          event.target.value = ""
+        }}
+        disabled={disabled}
+      />
+
+      {previewUrl ? (
+        <div className={`relative w-full ${previewSize === "main" ? "h-44 sm:h-52" : "h-28"}`}>
+          <img src={previewUrl} alt="Upload preview" className="h-full w-full object-cover" />
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition ${
+              uploading ? "bg-slate-900/55 opacity-100" : "bg-slate-900/35 opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            {uploading ? (
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-700">
+                <Loader2 size={13} className="animate-spin" />
+                Uploading...
+              </div>
+            ) : (
+              <p className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-700">
+                Click or drag to replace
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <Upload className="mx-auto" size={18} />
+          <p>{placeholder}</p>
+          {uploading && (
+            <p className="inline-flex items-center justify-center gap-1 text-[11px] text-slate-500">
+              <Loader2 size={12} className="animate-spin" />
+              Uploading...
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ContentPage(): JSX.Element {
   const [activeTab, setActiveTab] = useState<ContentTab>("impact")
   const [stories, setStories] = useState<StoryDto[]>([])
   const [organization, setOrganization] = useState<OrganizationDto>(emptyOrganization)
   const [orgDraft, setOrgDraft] = useState<OrganizationDto>(emptyOrganization)
   const [sponsors, setSponsors] = useState<SponsorDto[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMemberDto[]>([])
   const [activeStoryId, setActiveStoryId] = useState<ActiveId>("new")
   const [activeSponsorId, setActiveSponsorId] = useState<ActiveId>("new")
+  const [activeTeamId, setActiveTeamId] = useState<ActiveId>("new")
   const [storyDraft, setStoryDraft] = useState<StoryDto>(emptyStory)
+  const [storyGalleryUrlInput, setStoryGalleryUrlInput] = useState("")
   const [sponsorDraft, setSponsorDraft] = useState<SponsorDto>(emptySponsor)
+  const [teamDraft, setTeamDraft] = useState<TeamMemberDto>(emptyTeamMember)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploadingTarget, setUploadingTarget] = useState<UploadTarget>(null)
+  const [uploadPreviewUrls, setUploadPreviewUrls] = useState<UploadPreviewMap>({})
+  const uploadPreviewUrlsRef = useRef<UploadPreviewMap>({})
+  const [storyGalleryUploadThumbs, setStoryGalleryUploadThumbs] = useState<StoryGalleryUploadThumb[]>([])
+  const storyGalleryUploadThumbsRef = useRef<StoryGalleryUploadThumb[]>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    const previous = uploadPreviewUrlsRef.current
+    const targets: UploadPreviewTarget[] = ["storyMain", "storyGallery", "sponsor", "team"]
+    for (const target of targets) {
+      const previousUrl = previous[target]
+      const nextUrl = uploadPreviewUrls[target]
+      if (previousUrl && previousUrl.startsWith("blob:") && previousUrl !== nextUrl) {
+        URL.revokeObjectURL(previousUrl)
+      }
+    }
+    uploadPreviewUrlsRef.current = uploadPreviewUrls
+  }, [uploadPreviewUrls])
+
+  useEffect(() => {
+    return () => {
+      const targets: UploadPreviewTarget[] = ["storyMain", "storyGallery", "sponsor", "team"]
+      for (const target of targets) {
+        const previewUrl = uploadPreviewUrlsRef.current[target]
+        if (previewUrl && previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(previewUrl)
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    storyGalleryUploadThumbsRef.current = storyGalleryUploadThumbs
+  }, [storyGalleryUploadThumbs])
+
+  useEffect(() => {
+    return () => {
+      for (const thumb of storyGalleryUploadThumbsRef.current) {
+        if (thumb.previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(thumb.previewUrl)
+        }
+      }
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -187,9 +346,10 @@ function ContentPage(): JSX.Element {
       setLoading(true)
       setError(null)
       try {
-        const [storyData, settings] = await Promise.all([
+        const [storyData, settings, teamData] = await Promise.all([
           fetchAdminStories(),
           fetchSettings(),
+          fetchAdminTeam(),
         ])
         if (cancelled) return
         setStories(storyData)
@@ -204,6 +364,11 @@ function ContentPage(): JSX.Element {
         setSponsors(sponsorItems)
         if (sponsorItems.length > 0) {
           setActiveSponsorId(sponsorItems[0].id)
+        }
+        const teamItems = teamData.length > 0 ? teamData : settings?.team?.items ?? []
+        setTeamMembers(teamItems)
+        if (teamItems.length > 0) {
+          setActiveTeamId(teamItems[0].id)
         }
       } catch (err) {
         if (!cancelled) {
@@ -224,11 +389,17 @@ function ContentPage(): JSX.Element {
   useEffect(() => {
     if (activeStoryId === "new") {
       setStoryDraft({ ...emptyStory })
+      setStoryGalleryUrlInput("")
       return
     }
     const selected = stories.find(item => item.id === activeStoryId)
     if (selected) {
-      setStoryDraft({ ...emptyStory, ...selected })
+      setStoryDraft({
+        ...emptyStory,
+        ...selected,
+        galleryImages: Array.isArray(selected.galleryImages) ? selected.galleryImages : [],
+      })
+      setStoryGalleryUrlInput("")
     }
   }, [activeStoryId, stories])
 
@@ -243,6 +414,17 @@ function ContentPage(): JSX.Element {
     }
   }, [activeSponsorId, sponsors])
 
+  useEffect(() => {
+    if (activeTeamId === "new") {
+      setTeamDraft({ ...emptyTeamMember })
+      return
+    }
+    const selected = teamMembers.find(item => item.id === activeTeamId)
+    if (selected) {
+      setTeamDraft({ ...emptyTeamMember, ...selected })
+    }
+  }, [activeTeamId, teamMembers])
+
   function handleStoryChange<K extends keyof StoryDto>(key: K, value: StoryDto[K]) {
     setStoryDraft(prev => ({ ...prev, [key]: value }))
   }
@@ -253,6 +435,43 @@ function ContentPage(): JSX.Element {
 
   function handleSponsorChange<K extends keyof SponsorDto>(key: K, value: SponsorDto[K]) {
     setSponsorDraft(prev => ({ ...prev, [key]: value }))
+  }
+
+  function handleTeamChange<K extends keyof TeamMemberDto>(key: K, value: TeamMemberDto[K]) {
+    setTeamDraft(prev => ({ ...prev, [key]: value }))
+  }
+
+  function setUploadPreview(target: UploadPreviewTarget, previewUrl?: string) {
+    setUploadPreviewUrls(prev => {
+      if (!previewUrl) {
+        if (!(target in prev)) return prev
+        const next = { ...prev }
+        delete next[target]
+        return next
+      }
+      return { ...prev, [target]: previewUrl }
+    })
+  }
+
+  function addStoryGalleryUrl() {
+    const nextUrl = storyGalleryUrlInput.trim()
+    if (!nextUrl) return
+    setStoryDraft(prev => {
+      const existing = Array.isArray(prev.galleryImages) ? prev.galleryImages : []
+      if (existing.includes(nextUrl)) return prev
+      return { ...prev, galleryImages: [...existing, nextUrl] }
+    })
+    setStoryGalleryUrlInput("")
+  }
+
+  function removeStoryGalleryUrl(index: number) {
+    setStoryDraft(prev => {
+      const existing = Array.isArray(prev.galleryImages) ? prev.galleryImages : []
+      return {
+        ...prev,
+        galleryImages: existing.filter((_, currentIndex) => currentIndex !== index),
+      }
+    })
   }
 
   async function saveStory(status: "Draft" | "Published") {
@@ -332,6 +551,41 @@ function ContentPage(): JSX.Element {
     }
   }
 
+  async function saveTeamMember() {
+    if (!teamDraft.name.trim()) {
+      setError("Team member name is required.")
+      return
+    }
+    if (!teamDraft.role.trim()) {
+      setError("Team member role is required.")
+      return
+    }
+    setSaving(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const payload: Partial<TeamMemberDto> = {
+        name: teamDraft.name.trim(),
+        role: teamDraft.role.trim(),
+        photo: (teamDraft.photo || "").trim(),
+      }
+
+      const saved = activeTeamId === "new" || !teamDraft.id
+        ? await createAdminTeamMember(payload)
+        : await updateAdminTeamMember(teamDraft.id, payload)
+
+      const persistedItems = await fetchAdminTeam()
+      setTeamMembers(persistedItems)
+      setActiveTeamId(saved.id)
+      setTeamDraft({ ...emptyTeamMember, ...saved })
+      setSuccess("Team member saved.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save team member")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleDeleteStory(id: string) {
     const ok = window.confirm("Delete this story? This cannot be undone.")
     if (!ok) return
@@ -370,14 +624,54 @@ function ContentPage(): JSX.Element {
     }
   }
 
-  async function handleImageUpload(file: File, target: "story" | "sponsor") {
+  async function handleDeleteTeamMember(id: string) {
+    const ok = window.confirm("Delete this team member? This cannot be undone.")
+    if (!ok) return
+    setSaving(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      await deleteAdminTeamMember(id)
+      const persistedItems = await fetchAdminTeam()
+      setTeamMembers(persistedItems)
+      if (persistedItems.length > 0) {
+        setActiveTeamId(persistedItems[0].id)
+        setTeamDraft({ ...emptyTeamMember, ...persistedItems[0] })
+      } else {
+        setActiveTeamId("new")
+        setTeamDraft({ ...emptyTeamMember })
+      }
+      setSuccess("Team member deleted.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete team member")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleImageUpload(file: File, target: UploadPreviewTarget) {
     setUploadingTarget(target)
     setError(null)
     setSuccess(null)
     try {
-      const url = await uploadImage(file)
-      if (target === "story") {
+      const photo = await uploadAdminImage(file, {
+        folder: target === "sponsor" ? "sponsors" : target === "team" ? "team" : "stories",
+        title: target === "sponsor"
+          ? sponsorDraft.name || undefined
+          : target === "team"
+            ? teamDraft.name || undefined
+            : storyDraft.title || undefined,
+      })
+      const url = photo.imageUrl
+      if (target === "storyMain") {
         setStoryDraft(prev => ({ ...prev, imageUrl: url }))
+      } else if (target === "storyGallery") {
+        setStoryDraft(prev => {
+          const existing = Array.isArray(prev.galleryImages) ? prev.galleryImages : []
+          return existing.includes(url) ? prev : { ...prev, galleryImages: [...existing, url] }
+        })
+      } else if (target === "team") {
+        setTeamDraft(prev => ({ ...prev, photo: url }))
       } else {
         setSponsorDraft(prev => ({ ...prev, icon: url }))
       }
@@ -386,6 +680,71 @@ function ContentPage(): JSX.Element {
       setError(err instanceof Error ? err.message : "Failed to upload image")
     } finally {
       setUploadingTarget(null)
+    }
+  }
+
+  async function handleImageUploadWithPreview(file: File, target: UploadPreviewTarget) {
+    const localPreviewUrl = URL.createObjectURL(file)
+    setUploadPreview(target, localPreviewUrl)
+    try {
+      await handleImageUpload(file, target)
+    } finally {
+      setUploadPreview(target)
+    }
+  }
+
+  async function handleStoryGalleryFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    const timestamp = Date.now()
+    const queuedUploads = Array.from(files).map((file, index) => ({
+      id: `${timestamp}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      fileName: file.name,
+    }))
+
+    setStoryGalleryUploadThumbs(prev => [
+      ...prev,
+      ...queuedUploads.map(({ id, previewUrl, fileName }) => ({ id, previewUrl, fileName })),
+    ])
+
+    for (const queued of queuedUploads) {
+      try {
+        await handleImageUpload(queued.file, "storyGallery")
+      } finally {
+        setStoryGalleryUploadThumbs(prev => {
+          const current = prev.find(item => item.id === queued.id)
+          if (current?.previewUrl.startsWith("blob:")) {
+            URL.revokeObjectURL(current.previewUrl)
+          }
+          return prev.filter(item => item.id !== queued.id)
+        })
+      }
+    }
+  }
+
+  async function refreshTeamMembersFromDb() {
+    setSaving(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const dbTeamMembers = await fetchAdminTeam()
+      setTeamMembers(dbTeamMembers)
+      if (dbTeamMembers.length === 0) {
+        setActiveTeamId("new")
+        setTeamDraft({ ...emptyTeamMember })
+      } else if (activeTeamId === "new") {
+        setTeamDraft({ ...emptyTeamMember })
+      } else {
+        const selected = dbTeamMembers.find(item => item.id === activeTeamId) ?? dbTeamMembers[0]
+        setActiveTeamId(selected.id)
+        setTeamDraft({ ...emptyTeamMember, ...selected })
+      }
+      setSuccess("Team preview synced from database.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to refresh team members")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -419,7 +778,16 @@ function ContentPage(): JSX.Element {
                 setSuccess(null)
                 if (activeTab === "impact") {
                   const active = stories.find(item => item.id === activeStoryId)
-                  setStoryDraft(active ? { ...emptyStory, ...active } : { ...emptyStory })
+                  setStoryDraft(
+                    active
+                      ? {
+                          ...emptyStory,
+                          ...active,
+                          galleryImages: Array.isArray(active.galleryImages) ? active.galleryImages : [],
+                        }
+                      : { ...emptyStory },
+                  )
+                  setStoryGalleryUrlInput("")
                 }
                 if (activeTab === "contact") {
                   setOrgDraft(organization)
@@ -427,6 +795,10 @@ function ContentPage(): JSX.Element {
                 if (activeTab === "sponsors") {
                   const active = sponsors.find(item => item.id === activeSponsorId)
                   setSponsorDraft(active ? { ...emptySponsor, ...active } : { ...emptySponsor })
+                }
+                if (activeTab === "team") {
+                  const active = teamMembers.find(item => item.id === activeTeamId)
+                  setTeamDraft(active ? { ...emptyTeamMember, ...active } : { ...emptyTeamMember })
                 }
               }}
             >
@@ -457,6 +829,14 @@ function ContentPage(): JSX.Element {
               >
                 Save Sponsor
               </button>
+            ) : activeTab === "team" ? (
+              <button
+                className="rounded-full bg-[#F5C542] px-4 py-2 text-sm font-semibold text-[#3B2500] hover:bg-[#F3B928]"
+                onClick={saveTeamMember}
+                disabled={saving}
+              >
+                Save Team Member
+              </button>
             ) : (
               <button
                 className="rounded-full bg-[#F5C542] px-4 py-2 text-sm font-semibold text-[#3B2500] hover:bg-[#F3B928]"
@@ -484,7 +864,7 @@ function ContentPage(): JSX.Element {
         ))}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Impact Stories</p>
           <p className="mt-2 text-2xl font-bold text-slate-900">{stories.length}</p>
@@ -515,6 +895,17 @@ function ContentPage(): JSX.Element {
               <p key={item.id} className="truncate">{item.name}</p>
             ))}
             {sponsors.length > 4 && <p className="text-slate-400">+{sponsors.length - 4} more</p>}
+          </div>
+        </div>
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team Members</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{teamMembers.length}</p>
+          <p className="text-xs text-slate-500">People listed publicly</p>
+          <div className="mt-3 space-y-1 text-xs text-slate-600">
+            {teamMembers.slice(0, 4).map(item => (
+              <p key={item.id} className="truncate">{item.name}</p>
+            ))}
+            {teamMembers.length > 4 && <p className="text-slate-400">+{teamMembers.length - 4} more</p>}
           </div>
         </div>
       </div>
@@ -638,33 +1029,99 @@ function ContentPage(): JSX.Element {
                   </select>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Image URL</label>
-                <input
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
-                  value={storyDraft.imageUrl}
-                  onChange={event => handleStoryChange("imageUrl", event.target.value)}
-                />
-                <div className="mt-2 flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                  <Upload className="mx-auto" size={18} />
-                  <p>Upload a new story image</p>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Main Card Image URL</label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={event => {
-                      const file = event.target.files?.[0]
-                      if (!file) return
-                      void handleImageUpload(file, "story")
-                    }}
-                    disabled={!CLOUDINARY_ENABLED || uploadingTarget === "story"}
-                    className="text-xs"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                    value={storyDraft.imageUrl}
+                    onChange={event => handleStoryChange("imageUrl", event.target.value)}
                   />
-                  {uploadingTarget === "story" && <p className="text-[11px] text-slate-500">Uploading image...</p>}
-                  {!CLOUDINARY_ENABLED && (
-                    <p className="text-[11px] text-amber-600">
-                      Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to enable uploads.
-                    </p>
+                  <ImageUploadDropzone
+                    placeholder="Upload or drag an image"
+                    previewUrl={uploadPreviewUrls.storyMain ?? storyDraft.imageUrl}
+                    previewSize="main"
+                    disabled={uploadingTarget === "storyMain"}
+                    uploading={uploadingTarget === "storyMain"}
+                    onFilesSelected={files => {
+                      const file = files?.[0]
+                      if (!file) return
+                      void handleImageUploadWithPreview(file, "storyMain")
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <label className="text-xs font-semibold text-slate-700">Story Photo Gallery</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                      placeholder="Paste gallery image URL"
+                      value={storyGalleryUrlInput}
+                      onChange={event => setStoryGalleryUrlInput(event.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                      onClick={addStoryGalleryUrl}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <ImageUploadDropzone
+                    placeholder="Upload or drag images"
+                    multiple
+                    disabled={uploadingTarget === "storyGallery"}
+                    uploading={uploadingTarget === "storyGallery"}
+                    onFilesSelected={files => {
+                      void handleStoryGalleryFiles(files)
+                    }}
+                  />
+                  {storyGalleryUploadThumbs.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[11px] text-slate-500">
+                        Uploading {storyGalleryUploadThumbs.length} image{storyGalleryUploadThumbs.length === 1 ? "" : "s"}...
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {storyGalleryUploadThumbs.map(item => (
+                          <div
+                            key={item.id}
+                            className="relative h-16 w-16 overflow-hidden rounded-lg border border-slate-200 bg-white"
+                            title={item.fileName}
+                          >
+                            <img
+                              src={item.previewUrl}
+                              alt={item.fileName}
+                              className="h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/55 text-white">
+                              <Loader2 size={14} className="animate-spin" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {(storyDraft.galleryImages ?? []).map((image, index) => (
+                      <div key={`${image}-${index}`} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <img src={image} alt={`Gallery ${index + 1}`} className="h-24 w-full object-cover" />
+                        <div className="flex items-center justify-between px-2 py-1.5">
+                          <p className="truncate text-[11px] text-slate-500">Image {index + 1}</p>
+                          <button
+                            type="button"
+                            className="text-[11px] font-semibold text-rose-600"
+                            onClick={() => removeStoryGalleryUrl(index)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(storyDraft.galleryImages ?? []).length === 0 && (
+                      <p className="text-[11px] text-slate-500">No gallery images added yet.</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -716,6 +1173,18 @@ function ContentPage(): JSX.Element {
                 <p className="mt-2 text-sm text-slate-600">
                   {storyDraft.excerpt || "Story excerpt will appear here."}
                 </p>
+                {(storyDraft.galleryImages ?? []).length > 0 && (
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    {(storyDraft.galleryImages ?? []).slice(0, 4).map((image, index) => (
+                      <img
+                        key={`${image}-${index}`}
+                        src={image}
+                        alt={`Story gallery preview ${index + 1}`}
+                        className="h-14 w-full rounded-lg object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
                 <button className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#6A0DAD]">
                   Read full story <Pencil size={14} />
                 </button>
@@ -873,6 +1342,179 @@ function ContentPage(): JSX.Element {
         </div>
       )}
 
+      {activeTab === "team" && (
+        <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
+          <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Team Members</p>
+              <button
+                className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white"
+                onClick={() => setActiveTeamId("new")}
+              >
+                <Plus size={12} />
+                New
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Select a team member from DB data to edit roles and photos</p>
+            <div className="mt-3 space-y-2">
+              {teamMembers.map(item => (
+                <button
+                  key={item.id}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
+                    activeTeamId === item.id
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  }`}
+                  onClick={() => setActiveTeamId(item.id)}
+                >
+                  <span className="truncate">{item.name}</span>
+                  <span className="truncate text-[10px] opacity-70">{item.role || "Role"}</span>
+                </button>
+              ))}
+              {teamMembers.length === 0 && <p className="text-xs text-slate-500">No team members yet.</p>}
+            </div>
+          </aside>
+
+          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Edit Team Member</p>
+                <p className="text-xs text-slate-500">Create and manage people shown in the Team section.</p>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${teamDraft.photo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                {teamDraft.photo ? "Photo set" : "No photo"}
+              </span>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Full Name</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                  value={teamDraft.name}
+                  onChange={event => handleTeamChange("name", event.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Role</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                  value={teamDraft.role}
+                  onChange={event => handleTeamChange("role", event.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Photo URL</label>
+                <input
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm outline-none"
+                  value={teamDraft.photo ?? ""}
+                  onChange={event => handleTeamChange("photo", event.target.value)}
+                />
+                <ImageUploadDropzone
+                  placeholder="Upload or drag an image"
+                  previewUrl={uploadPreviewUrls.team ?? teamDraft.photo}
+                  disabled={uploadingTarget === "team"}
+                  uploading={uploadingTarget === "team"}
+                  onFilesSelected={files => {
+                    const file = files?.[0]
+                    if (!file) return
+                    void handleImageUploadWithPreview(file, "team")
+                  }}
+                />
+              </div>
+            </div>
+
+            {teamDraft.id && (
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-rose-600 shadow-sm ring-1 ring-rose-200 hover:bg-rose-50"
+                  onClick={() => handleDeleteTeamMember(teamDraft.id)}
+                  disabled={saving}
+                >
+                  <Trash2 size={14} />
+                  Delete team member
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Live Preview: Team Section</p>
+              <div className="flex items-center gap-2">
+                <button
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+                  onClick={refreshTeamMembersFromDb}
+                  disabled={saving}
+                >
+                  <Save size={14} />
+                  Sync DB
+                </button>
+                <button
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
+                  onClick={() => openPreview("/about")}
+                >
+                  <ExternalLink size={14} />
+                  Preview
+                </button>
+              </div>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+              <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                {teamDraft.photo ? (
+                  <img src={teamDraft.photo} alt={teamDraft.name || "Team member"} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-slate-400">
+                    <ImageIcon />
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-slate-900">{teamDraft.name || "Team member name"}</h3>
+                <p className="mt-1 text-sm text-slate-600">{teamDraft.role || "Role title"}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team Preview Board</p>
+              <p className="mt-1 text-[11px] text-slate-500">Loaded from database. Click a card to edit that member.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {teamMembers.map(item => (
+                  <button
+                    key={`preview-${item.id}`}
+                    type="button"
+                    className={`overflow-hidden rounded-xl border text-left transition ${
+                      activeTeamId === item.id
+                        ? "border-slate-900 shadow-md"
+                        : "border-slate-200 shadow-sm hover:border-slate-300"
+                    }`}
+                    onClick={() => setActiveTeamId(item.id)}
+                  >
+                    <div className="h-28 w-full bg-slate-100">
+                      {item.photo ? (
+                        <img src={item.photo} alt={item.name || "Team member"} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-400">
+                          <ImageIcon size={18} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-3 py-2">
+                      <p className="truncate text-sm font-semibold text-slate-900">{item.name || "Unnamed member"}</p>
+                      <p className="truncate text-xs text-slate-600">{item.role || "Role not set"}</p>
+                    </div>
+                  </button>
+                ))}
+                {teamMembers.length === 0 && (
+                  <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500">
+                    No team members in the database yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
       {activeTab === "sponsors" && (
         <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
           <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
@@ -935,27 +1577,17 @@ function ContentPage(): JSX.Element {
                   value={sponsorDraft.icon ?? ""}
                   onChange={event => handleSponsorChange("icon", event.target.value)}
                 />
-                <div className="mt-2 flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                  <Upload className="mx-auto" size={18} />
-                  <p>Upload a sponsor icon</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={event => {
-                      const file = event.target.files?.[0]
-                      if (!file) return
-                      void handleImageUpload(file, "sponsor")
-                    }}
-                    disabled={!CLOUDINARY_ENABLED || uploadingTarget === "sponsor"}
-                    className="text-xs"
-                  />
-                  {uploadingTarget === "sponsor" && <p className="text-[11px] text-slate-500">Uploading icon...</p>}
-                  {!CLOUDINARY_ENABLED && (
-                    <p className="text-[11px] text-amber-600">
-                      Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to enable uploads.
-                    </p>
-                  )}
-                </div>
+                <ImageUploadDropzone
+                  placeholder="Upload or drag an image"
+                  previewUrl={uploadPreviewUrls.sponsor ?? sponsorDraft.icon}
+                  disabled={uploadingTarget === "sponsor"}
+                  uploading={uploadingTarget === "sponsor"}
+                  onFilesSelected={files => {
+                    const file = files?.[0]
+                    if (!file) return
+                    void handleImageUploadWithPreview(file, "sponsor")
+                  }}
+                />
               </div>
             </div>
 
