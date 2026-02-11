@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
 const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN ?? "dev-admin-token";
 
 function adminHeaders(): HeadersInit {
@@ -220,12 +220,25 @@ export interface SettingsDto {
   sponsors: {
     items: SponsorDto[];
   };
+  team: {
+    items: TeamMemberDto[];
+  };
 }
 
 export interface SponsorDto {
   id: string;
   name: string;
   icon?: string;
+}
+
+export interface TeamMemberDto {
+  id: string;
+  name: string;
+  role: string;
+  photo?: string;
+  sortOrder?: number;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export type OrganizationDto = SettingsDto["organization"];
@@ -253,11 +266,45 @@ export interface StoryDto {
   excerpt: string;
   content?: string;
   imageUrl: string;
+  galleryImages?: string[];
   status?: string;
   campaignId?: string;
   area?: string;
   date?: string;
   location?: string;
+}
+
+export interface AlbumDto {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  status: string;
+  coverImageUrl: string;
+  photoCount: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface PhotoDto {
+  id: number;
+  albumId: string | null;
+  title: string;
+  description: string;
+  imageUrl: string;
+  cloudinaryPublicId: string;
+  mimeType: string;
+  bytes: number;
+  width: number;
+  height: number;
+  createdAt: string;
+}
+
+export interface UploadPhotoPayload {
+  albumId?: string;
+  folder?: string;
+  title?: string;
+  description?: string;
 }
 
 export interface TestimonialDto {
@@ -275,10 +322,69 @@ export interface AnalyticsOverview {
   channelMix: { label: string; value: number; caption: string }[];
 }
 
+export function isServerUnreachable(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("failed to fetch") ||
+    message.includes("fetch failed") ||
+    message.includes("networkerror") ||
+    message.includes("network error") ||
+    message.includes("load failed") ||
+    message.includes("connection refused") ||
+    message.includes("econnrefused") ||
+    message.includes("err_connection_refused") ||
+    message.includes("eai_again")
+  );
+}
+
+type ApiRequestError = Error & {
+  status?: number;
+  details?: string;
+};
+
+function normalizeErrorText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+export function getApiErrorStatus(error: unknown): number | null {
+  if (error && typeof error === "object" && "status" in error) {
+    const status = (error as { status?: unknown }).status;
+    if (typeof status === "number" && Number.isFinite(status)) {
+      return status;
+    }
+  }
+  if (error instanceof Error) {
+    const match = error.message.match(/status\s+(\d{3})/i);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+export function isServerErrorResponse(error: unknown): boolean {
+  const status = getApiErrorStatus(error);
+  return status !== null && status >= 500;
+}
+
+export function isRecoverableApiError(error: unknown): boolean {
+  return isServerUnreachable(error) || isServerErrorResponse(error);
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `Request failed with status ${response.status}`);
+    let text = "";
+    try {
+      text = normalizeErrorText(await response.text());
+    } catch {
+      text = "";
+    }
+    const statusMessage = `Request failed with status ${response.status}`;
+    const details = text.slice(0, 400);
+    const safeMessage = response.status >= 500 ? statusMessage : details || statusMessage;
+    const error = new Error(safeMessage) as ApiRequestError;
+    error.status = response.status;
+    if (details) error.details = details;
+    throw error;
   }
   return (await response.json()) as T;
 }
@@ -439,6 +545,19 @@ export async function fetchStories(): Promise<StoryDto[]> {
   return handleResponse<StoryDto[]>(res);
 }
 
+export async function fetchGalleryAlbums(): Promise<AlbumDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/gallery/albums`);
+  return handleResponse<AlbumDto[]>(res);
+}
+
+export async function fetchGalleryPhotos(params?: { albumId?: string }): Promise<PhotoDto[]> {
+  const search = new URLSearchParams();
+  if (params?.albumId) search.set("albumId", params.albumId);
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  const res = await fetch(`${API_BASE_URL}/api/gallery/photos${suffix}`);
+  return handleResponse<PhotoDto[]>(res);
+}
+
 export async function fetchOrganization(): Promise<OrganizationDto> {
   const res = await fetch(`${API_BASE_URL}/api/organization`);
   return handleResponse<OrganizationDto>(res);
@@ -447,6 +566,53 @@ export async function fetchOrganization(): Promise<OrganizationDto> {
 export async function fetchSponsors(): Promise<SponsorDto[]> {
   const res = await fetch(`${API_BASE_URL}/api/sponsors`);
   return handleResponse<SponsorDto[]>(res);
+}
+
+export async function fetchTeam(): Promise<TeamMemberDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/team`);
+  return handleResponse<TeamMemberDto[]>(res);
+}
+
+export async function fetchAdminTeam(): Promise<TeamMemberDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/team`, {
+    headers: adminHeaders(),
+  });
+  return handleResponse<TeamMemberDto[]>(res);
+}
+
+export async function createAdminTeamMember(payload: Partial<TeamMemberDto>): Promise<TeamMemberDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/team`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<TeamMemberDto>(res);
+}
+
+export async function updateAdminTeamMember(id: string, payload: Partial<TeamMemberDto>): Promise<TeamMemberDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/team/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<TeamMemberDto>(res);
+}
+
+export async function deleteAdminTeamMember(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/team/${id}`, {
+    method: "DELETE",
+    headers: adminHeaders(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
 }
 
 export async function fetchAdminCampaigns(): Promise<CampaignDto[]> {
@@ -496,6 +662,74 @@ export async function fetchAdminStories(): Promise<StoryDto[]> {
     headers: adminHeaders(),
   });
   return handleResponse<StoryDto[]>(res);
+}
+
+export async function fetchAdminAlbums(): Promise<AlbumDto[]> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/albums`, {
+    headers: adminHeaders(),
+  });
+  return handleResponse<AlbumDto[]>(res);
+}
+
+export async function createAdminAlbum(payload: Partial<AlbumDto>): Promise<AlbumDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/albums`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<AlbumDto>(res);
+}
+
+export async function updateAdminAlbum(id: string, payload: Partial<AlbumDto>): Promise<AlbumDto> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/albums/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...adminHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<AlbumDto>(res);
+}
+
+export async function deleteAdminAlbum(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/admin/albums/${id}`, {
+    method: "DELETE",
+    headers: adminHeaders(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
+}
+
+export async function fetchAdminPhotos(params?: { albumId?: string }): Promise<PhotoDto[]> {
+  const search = new URLSearchParams();
+  if (params?.albumId) search.set("albumId", params.albumId);
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  const res = await fetch(`${API_BASE_URL}/api/admin/photos${suffix}`, {
+    headers: adminHeaders(),
+  });
+  return handleResponse<PhotoDto[]>(res);
+}
+
+export async function uploadAdminImage(file: File, payload: UploadPhotoPayload = {}): Promise<PhotoDto> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (payload.albumId) formData.append("albumId", payload.albumId);
+  if (payload.folder) formData.append("folder", payload.folder);
+  if (payload.title) formData.append("title", payload.title);
+  if (payload.description) formData.append("description", payload.description);
+
+  const res = await fetch(`${API_BASE_URL}/api/admin/uploads/photos`, {
+    method: "POST",
+    headers: adminHeaders(),
+    body: formData,
+  });
+  return handleResponse<PhotoDto>(res);
 }
 
 export async function createAdminStory(payload: Partial<StoryDto>): Promise<StoryDto> {
