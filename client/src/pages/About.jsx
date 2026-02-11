@@ -1,8 +1,7 @@
 import {Heart, Users, Target, Eye, Award, Globe} from "lucide-react";
 import Header from "../components/Header.jsx";
-import Team from "../components/Team.jsx";
 import Footer from "../components/Footer.jsx";
-import bg_image from "../assets/Image.png";
+import bg_image from "../assets/Image.webp";
 import TeamAbout from "../components/TeamAbout.jsx";
 import { motion } from "framer-motion";
 
@@ -140,6 +139,10 @@ const About = () =>{
                                 src="about.avif"
                                 alt="Team Photo"
                                 className="rounded-2xl shadow-elegant w-full h-80 md:h-96 object-cover"
+                                loading="lazy"
+                                decoding="async"
+                                width={960}
+                                height={640}
                             />
                         </motion.div>
                     </div>
@@ -328,9 +331,17 @@ const About = () =>{
             {/* Impact Preview */}
             <section className="relative py-12 md:py-20 bg-[#6A0DAD] text-white">
 
-                <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-35"
-                     style={{backgroundImage: `url(${bg_image})`}}>
-
+                <div className="absolute z-0 inset-0 overflow-hidden">
+                    <img
+                        src={bg_image}
+                        alt=""
+                        aria-hidden="true"
+                        className="h-full w-full object-cover opacity-35"
+                        loading="lazy"
+                        decoding="async"
+                        width={1920}
+                        height={1080}
+                    />
                 </div>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <motion.div

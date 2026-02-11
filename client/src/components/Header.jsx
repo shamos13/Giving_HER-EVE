@@ -36,6 +36,11 @@ const Header = () => {
                                 src="/amos.svg"
                                 alt="Giving Her E.V.E logo"
                                 className="h-6 md:h-8 w-auto object-contain"
+                                loading="eager"
+                                fetchPriority="high"
+                                decoding="async"
+                                width={180}
+                                height={32}
                             />
                         </Link>
                     </motion.div>
