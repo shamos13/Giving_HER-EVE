@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   BarChart3,
   HandHeart,
-  Mail,
   Megaphone,
   Pencil,
   UserCheck,
@@ -140,13 +139,6 @@ function DashboardHome(): JSX.Element {
       time: "5 hours ago",
       icon: UserCheck,
       tone: "bg-emerald-100 text-emerald-700",
-    },
-    {
-      id: "inbox-message",
-      title: "New inbox message from Mark S.",
-      time: "Today",
-      icon: Mail,
-      tone: "bg-sky-100 text-sky-700",
     },
   ]
 

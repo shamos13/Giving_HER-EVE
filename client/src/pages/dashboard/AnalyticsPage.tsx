@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { toast } from "react-toastify"
 import { fetchDonationAnalytics, downloadDonationReport, fetchAnalyticsOverview } from "../../services/api"
 
 function AnalyticsPage(): JSX.Element {
@@ -201,8 +202,7 @@ function AnalyticsPage(): JSX.Element {
                 try {
                   await downloadDonationReport("pdf")
                 } catch (e) {
-                  // eslint-disable-next-line no-alert
-                  alert(e instanceof Error ? e.message : "Failed to export PDF")
+                  toast.error(e instanceof Error ? e.message : "Failed to export PDF")
                 }
               }}
             >
@@ -214,8 +214,7 @@ function AnalyticsPage(): JSX.Element {
                 try {
                   await downloadDonationReport("csv")
                 } catch (e) {
-                  // eslint-disable-next-line no-alert
-                  alert(e instanceof Error ? e.message : "Failed to export CSV")
+                  toast.error(e instanceof Error ? e.message : "Failed to export CSV")
                 }
               }}
             >

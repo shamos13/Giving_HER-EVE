@@ -2,16 +2,18 @@ import {useEffect, useState} from "react";
 import { Link } from "react-router";
 import {Users, Mail, MapPin, MessageCircle, Phone, Send, Heart} from "lucide-react";
 import Header from "../components/Header.jsx";
-import {Input} from "@headlessui/react";
 import FAQs from "../components/FAQs.jsx";
 import NewsLetter from "../components/NewsLetter.jsx";
 import Footer from "../components/Footer.jsx";
-import { fetchOrganization, isServerUnreachable } from "../services/api";
+import { toast } from "react-toastify";
+import { createMessage, fetchOrganization, isServerUnreachable } from "../services/api";
+
+const CONTACT_EMAIL = "amosprosper214@gmail.com";
 
 const fallbackOrganization = {
     address: "Nairobi, Kenya",
     phone: "+254 792 496622",
-    email: "info@givinghereve.org",
+    email: CONTACT_EMAIL,
 };
 
 const Contact = () => {
@@ -20,13 +22,14 @@ const Contact = () => {
         email: "",
         phone:'',
         subject: "",
-        inquiry_type: "",
+        inquiryType: "",
         message: "",
     });
     const [organization, setOrganization] = useState(null);
     const [orgLoading, setOrgLoading] = useState(false);
     const [orgError, setOrgError] = useState(null);
     const [useFallbackOrganization, setUseFallbackOrganization] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -70,11 +73,36 @@ const Contact = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        alert('Message sent successfully!');
-        // Handle form submission here
+        if (submitting) return;
+
+        try {
+            setSubmitting(true);
+            await createMessage({
+                name: formData.name.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone.trim(),
+                subject: formData.subject.trim(),
+                inquiryType: formData.inquiryType,
+                message: formData.message.trim(),
+            });
+
+            toast.success("Message sent successfully!");
+            setFormData({
+                name: "",
+                email: "",
+                phone: "",
+                subject: "",
+                inquiryType: "",
+                message: "",
+            });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to send message. Please try again.";
+            toast.error(message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const org = organization && Object.keys(organization).length > 0
@@ -99,7 +127,7 @@ const Contact = () => {
         {
             icon: <Mail className="h-6 w-6"/>,
             title:"Email",
-            details:[org.email || "Not available"],
+            details:[CONTACT_EMAIL],
             description: "Send us an email and we'll respond within 24 hours"
         },
         /* {
@@ -209,7 +237,7 @@ const Contact = () => {
                             <div className="bg-white rounded-lg shadow-lg p-8">
                                 <div className="p-6">
                                     <h3 className="text-2xl font-bold text-[#232027] mb-6"> Send Us A message</h3>
-                                        <form className="space-y-6">
+                                        <form className="space-y-6" onSubmit={handleSubmit}>
                                             {/* Name and Email */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div>
@@ -218,8 +246,8 @@ const Contact = () => {
                                                         className="text-red-500">*</span></label>
                                                     <input
                                                         type="text"
-                                                        id="fullName"
-                                                        name="fullName"
+                                                        id="name"
+                                                        name="name"
                                                         value={formData.name}
                                                         onChange={handleInputChange}
                                                         required
@@ -269,7 +297,7 @@ const Contact = () => {
                                                         <select
                                                             id="inquiryType"
                                                             name="inquiryType"
-                                                            value={formData.inquiry_type}
+                                                            value={formData.inquiryType}
                                                             onChange={handleInputChange}
                                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white"
                                                         >
@@ -317,10 +345,11 @@ const Contact = () => {
 
                                             {/* Submit Button */}
                                             <button
-                                                onClick={handleSubmit}
+                                                type="submit"
+                                                disabled={submitting}
                                                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
                                             >
-                                                Send Message
+                                                {submitting ? "Sending..." : "Send Message"}
                                                 <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                                             </button>
                                         </form>
@@ -382,10 +411,10 @@ const Contact = () => {
                                     <div className="flex items-center gap-3">
                                         <Mail className="w-5 h-5 text-gray-500 flex-shrink-0" />
                                         <a
-                                            href="mailto:emergency@givinghereve.org"
+                                            href={`mailto:${CONTACT_EMAIL}`}
                                             className="text-gray-700 font-medium break-all hover:text-purple-600 transition-colors"
                                         >
-                                            emergency@givinghereve.org
+                                            {CONTACT_EMAIL}
                                         </a>
                                     </div>
                                 </div>
