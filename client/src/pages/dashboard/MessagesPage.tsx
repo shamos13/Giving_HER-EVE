@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { CheckCircle2, Mail, MessageSquare, Search, Send } from "lucide-react"
+import { toast } from "react-toastify"
 import { fetchMessageInsights, fetchMessages, type MessageDto, type MessageInsights } from "../../services/api"
 
 function MessagesPage(): JSX.Element {
@@ -15,33 +16,52 @@ function MessagesPage(): JSX.Element {
 
   useEffect(() => {
     let cancelled = false
-    async function load() {
-      setLoading(true)
-      setError(null)
+    async function load(showLoading = false) {
+      if (showLoading) {
+        setLoading(true)
+        setError(null)
+      }
       try {
-        const [messagesRes, insightsRes] = await Promise.all([
-          fetchMessages(),
-          fetchMessageInsights(),
-        ])
+        const messagesRes = await fetchMessages()
         if (cancelled) return
         setMessages(messagesRes)
-        setInsights(insightsRes)
-        if (messagesRes.length > 0) {
-          setSelectedId(messagesRes[0].id)
-        }
+        setSelectedId(previousId =>
+          previousId && messagesRes.some(message => message.id === previousId)
+            ? previousId
+            : messagesRes[0]?.id ?? null,
+        )
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Failed to load messages")
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && showLoading) {
           setLoading(false)
         }
       }
     }
-    void load()
+
+    async function loadInsights() {
+      try {
+        const insightsRes = await fetchMessageInsights()
+        if (!cancelled) {
+          setInsights(insightsRes)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load messages")
+        }
+      }
+    }
+
+    void Promise.all([load(true), loadInsights()])
+    const intervalId = window.setInterval(() => {
+      void load(false)
+    }, 15000)
+
     return () => {
       cancelled = true
+      window.clearInterval(intervalId)
     }
   }, [])
 
@@ -75,12 +95,10 @@ function MessagesPage(): JSX.Element {
   function handleReply() {
     if (!selectedMessage) return
     if (!replyText.trim()) {
-      // eslint-disable-next-line no-alert
-      alert("Write a reply before sending.")
+      toast.warning("Write a reply before sending.")
       return
     }
-    // eslint-disable-next-line no-alert
-    alert(`Reply sent to ${selectedMessage.email}.`)
+    toast.success(`Reply sent to ${selectedMessage.email}.`)
     setReplyText("")
   }
 
@@ -251,8 +269,7 @@ function MessagesPage(): JSX.Element {
                   <button
                     className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700"
                     onClick={() => {
-                      // eslint-disable-next-line no-alert
-                      alert("Resolve action will be wired to the backend.")
+                      toast.info("Resolve action will be wired to the backend.")
                     }}
                   >
                     <CheckCircle2 size={14} />

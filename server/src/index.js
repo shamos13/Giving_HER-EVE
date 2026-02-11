@@ -16,7 +16,10 @@ const parsedPort = Number.parseInt(String(process.env.PORT || "8080"), 10);
 const PORT = Number.isNaN(parsedPort) ? 8080 : parsedPort;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "dev-admin-token";
 const DATABASE_URL = process.env.DATABASE_URL?.trim() || "";
-const shouldUseSSL = process.env.DATABASE_SSL === "true" || DATABASE_URL.includes("supabase.co");
+const shouldUseSSL =
+  process.env.DATABASE_SSL === "true" ||
+  DATABASE_URL.includes("supabase.co") ||
+  DATABASE_URL.includes("supabase.com");
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME?.trim() || "";
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY?.trim() || "";
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET?.trim() || "";
@@ -166,6 +169,7 @@ const REQUIRED_SCHEMA_TABLES = [
   "faqs",
   "settings",
 ];
+const SEEDED_MESSAGE_ID_REGEX = "^m[0-9]+$";
 
 function buildErrorDetails(error) {
   if (!error || typeof error !== "object") return { message: String(error) };
@@ -352,6 +356,28 @@ function formatCurrency(amount) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+function buildMessagePreview(value, maxLength = 96) {
+  const normalized = String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) return "";
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function normalizeMessageType(value) {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (!normalized) return "General";
+  if (normalized.includes("volunteer")) return "Volunteer";
+  if (normalized.includes("donat")) return "Donation";
+  if (normalized.includes("partner") || normalized.includes("media")) return "Partnership";
+  return "General";
+}
+
+function createMessageId() {
+  return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function initials(name) {
@@ -881,6 +907,78 @@ app.get("/api/faqs", asyncRoute(async (_req, res) => {
   res.json(rows.map(mapFaqRow));
 }));
 
+app.post("/api/messages", asyncRoute(async (req, res) => {
+  const payload = isPlainObject(req.body) ? req.body : {};
+
+  const name = typeof payload.name === "string" ? payload.name.trim() : "";
+  const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+  const phone = typeof payload.phone === "string" ? payload.phone.trim() : "";
+  const subject = typeof payload.subject === "string" ? payload.subject.trim() : "";
+  const messageText = typeof payload.message === "string" ? payload.message.trim() : "";
+  const inquiryType = payload.inquiryType ?? payload.inquiry_type ?? payload.type;
+  const type = normalizeMessageType(inquiryType);
+
+  if (!name) {
+    res.status(400).json({ error: "Name is required" });
+    return;
+  }
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!email || !isValidEmail) {
+    res.status(400).json({ error: "A valid email is required" });
+    return;
+  }
+
+  if (!messageText) {
+    res.status(400).json({ error: "Message is required" });
+    return;
+  }
+
+  const messageSections = [];
+  if (subject) messageSections.push(`Subject: ${subject}`);
+  if (phone) messageSections.push(`Phone: ${phone}`);
+  messageSections.push(messageText);
+
+  const previewSeed = subject ? `${subject} - ${messageText}` : messageText;
+  const preview = buildMessagePreview(previewSeed);
+  const createdAt = new Date().toISOString();
+  const messageId = createMessageId();
+
+  const { rows } = await dbQuery(
+    `INSERT INTO messages (
+      id,
+      name,
+      email,
+      type,
+      preview,
+      message,
+      status,
+      created_at
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    RETURNING ${MESSAGE_COLUMNS}`,
+    [
+      messageId,
+      name,
+      email,
+      type,
+      preview,
+      messageSections.join("\n\n"),
+      "New",
+      createdAt,
+    ],
+  );
+
+  const saved = mapMessageRow(rows[0]);
+  logChange("message", "created", {
+    id: saved.id,
+    type: saved.type,
+    status: saved.status,
+  });
+
+  res.status(201).json(saved);
+}));
+
 app.post("/api/donations", asyncRoute(async (req, res) => {
   const payload = isPlainObject(req.body) ? req.body : {};
   const { amount, currency, donorName, donorEmail, source, campaignId, category } = payload;
@@ -940,7 +1038,10 @@ app.get("/api/admin/dashboard", requireAdmin, asyncRoute(async (_req, res) => {
         COUNT(*) FILTER (WHERE role = 'Volunteer')::int AS total_volunteers
        FROM users`,
     ),
-    dbQuery("SELECT COUNT(*)::int AS open_messages FROM messages WHERE status IS DISTINCT FROM 'Resolved'"),
+    dbQuery(
+      "SELECT COUNT(*)::int AS open_messages FROM messages WHERE status IS DISTINCT FROM 'Resolved' AND id !~ $1",
+      [SEEDED_MESSAGE_ID_REGEX],
+    ),
     dbQuery(
       `SELECT ${DONATION_COLUMNS}
        FROM donations
@@ -1096,7 +1197,9 @@ app.get("/api/admin/messages", requireAdmin, asyncRoute(async (_req, res) => {
   const { rows } = await dbQuery(
     `SELECT ${MESSAGE_COLUMNS}
      FROM messages
+     WHERE id !~ $1
      ORDER BY created_at DESC`,
+    [SEEDED_MESSAGE_ID_REGEX],
   );
   res.json(rows.map(mapMessageRow));
 }));

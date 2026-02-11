@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react"
-import { NavLink, Outlet, useLocation } from "react-router"
+import { Link, NavLink, Outlet, useLocation } from "react-router"
 import type { LucideIcon } from "lucide-react"
 import {
+  ArrowUpRight,
   BarChart3,
   Bell,
+  BookOpen,
   CalendarClock,
   FileText,
   HandHeart,
@@ -18,7 +20,16 @@ import {
 function DashboardLayout(): JSX.Element {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const { pathname } = useLocation()
-  const activePage = useMemo(() => navItems.find(item => pathname.startsWith(item.path)), [pathname])
+  const activePage = useMemo(() => {
+    if (pathname === "/dashboard/guide" || pathname.startsWith("/dashboard/guide/")) {
+      return { label: "Guide" }
+    }
+    return [...navItems]
+      .sort((a, b) => b.path.length - a.path.length)
+      .find(item => pathname === item.path || pathname.startsWith(`${item.path}/`))
+  }, [pathname])
+  const logoSrc = `${import.meta.env.BASE_URL}logo.svg`
+  const logoFallbackSrc = `${import.meta.env.BASE_URL}amos.svg`
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -28,8 +39,18 @@ function DashboardLayout(): JSX.Element {
         >
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 text-white grid place-items-center font-semibold">
-                E
+              <div className="h-10 w-10 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+                <img
+                  src={logoSrc}
+                  alt="Giving Her E.V.E logo"
+                  className="h-full w-full object-contain"
+                  loading="eager"
+                  decoding="async"
+                  onError={event => {
+                    event.currentTarget.onerror = null
+                    event.currentTarget.src = logoFallbackSrc
+                  }}
+                />
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-500">Admin Console</p>
@@ -44,10 +65,25 @@ function DashboardLayout(): JSX.Element {
             {navItems.map(item => (
               <SidebarLink key={item.path} item={item} onNavigate={() => setIsSidebarOpen(false)} />
             ))}
+            <Link
+              to="/"
+              onClick={() => setIsSidebarOpen(false)}
+              className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+            >
+              <span>View Main Site</span>
+              <ArrowUpRight size={16} />
+            </Link>
             <div className="mt-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-5 text-white shadow-lg">
               <p className="text-sm font-semibold">Need help?</p>
               <p className="mt-1 text-sm opacity-90">Check quick tips for managing donations, programs, and messages efficiently.</p>
-              <button className="mt-3 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium hover:bg-white/20">View guide</button>
+              <Link
+                to="/dashboard/guide"
+                onClick={() => setIsSidebarOpen(false)}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium hover:bg-white/20"
+              >
+                <BookOpen size={16} />
+                <span>View guide</span>
+              </Link>
             </div>
           </nav>
         </aside>
