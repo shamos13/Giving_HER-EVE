@@ -8,6 +8,19 @@ export default defineConfig({
       tailwindcss(),
       react()
   ],
+    build: {
+        cssCodeSplit: true,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    react: ["react", "react-dom", "react-router"],
+                    motion: ["framer-motion"],
+                    charts: ["recharts"],
+                    icons: ["lucide-react", "react-icons"],
+                },
+            },
+        },
+    },
     base:
         process.env.NODE_ENV === "production"
             ? (process.env.VITE_BASE_PATH || "/Giving_HER-EVE/")

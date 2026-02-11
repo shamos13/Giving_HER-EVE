@@ -3,7 +3,7 @@ import teamMember2 from "../assets/team-member-2.jpg";
 import teamMember3 from "../assets/team-member-3.jpg";
 import teamMember4 from "../assets/team-member-4.jpg";
 import teamMember5 from "../assets/team-member-5.jpg";
-import headerImage from "../assets/header_img.png";
+import headerImage from "../assets/header_img.webp";
 
 export const IMPACT_AREAS = [
   {

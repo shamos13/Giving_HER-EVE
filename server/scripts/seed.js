@@ -28,6 +28,10 @@ const db = JSON.parse(raw);
 
 const client = await pool.connect();
 
+function toJson(value, fallback) {
+  return JSON.stringify(value ?? fallback);
+}
+
 try {
   await client.query("BEGIN");
 
@@ -73,13 +77,14 @@ try {
   for (const story of db.stories || []) {
     await client.query(
       `INSERT INTO stories (
-        id, title, excerpt, content, image_url, status, campaign_id
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7)
+        id, title, excerpt, content, image_url, gallery_images, status, campaign_id
+      ) VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8)
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         excerpt = EXCLUDED.excerpt,
         content = EXCLUDED.content,
         image_url = EXCLUDED.image_url,
+        gallery_images = EXCLUDED.gallery_images,
         status = EXCLUDED.status,
         campaign_id = EXCLUDED.campaign_id`,
       [
@@ -88,6 +93,7 @@ try {
         story.excerpt || null,
         story.content || null,
         story.imageUrl || null,
+        toJson(Array.isArray(story.galleryImages) ? story.galleryImages : [], []),
         story.status || null,
         story.campaignId || null,
       ],
@@ -238,7 +244,7 @@ try {
     await client.query(
       `INSERT INTO content_sections (
         id, name, description, status, fields
-      ) VALUES ($1,$2,$3,$4,$5)
+      ) VALUES ($1,$2,$3,$4,$5::jsonb)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
@@ -249,7 +255,7 @@ try {
         section.name || null,
         section.description || null,
         section.status || null,
-        section.fields || [],
+        toJson(Array.isArray(section.fields) ? section.fields : [], []),
       ],
     );
   }
@@ -258,9 +264,45 @@ try {
   for (const [section, data] of Object.entries(settings)) {
     await client.query(
       `INSERT INTO settings (section, data)
-       VALUES ($1, $2)
+       VALUES ($1, $2::jsonb)
        ON CONFLICT (section) DO UPDATE SET data = EXCLUDED.data`,
-      [section, data ?? {}],
+      [section, toJson(data, {})],
+    );
+  }
+
+  const settingsTeamItems = Array.isArray(settings?.team?.items) ? settings.team.items : [];
+  const explicitTeamMembers = Array.isArray(db.teamMembers) ? db.teamMembers : [];
+  const teamMembers = explicitTeamMembers.length > 0 ? explicitTeamMembers : settingsTeamItems;
+
+  for (const [index, member] of teamMembers.entries()) {
+    if (!member || typeof member !== "object") continue;
+
+    const name = typeof member.name === "string" ? member.name.trim() : "";
+    const role = typeof member.role === "string" ? member.role.trim() : "";
+    if (!name || !role) continue;
+
+    const id = typeof member.id === "string" && member.id.trim()
+      ? member.id.trim()
+      : `team-${index + 1}`;
+    const photo = typeof member.photo === "string" ? member.photo.trim() : "";
+
+    await client.query(
+      `INSERT INTO team_members (
+        id, name, role, photo, sort_order, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,NOW(),NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        role = EXCLUDED.role,
+        photo = EXCLUDED.photo,
+        sort_order = EXCLUDED.sort_order,
+        updated_at = NOW()`,
+      [
+        id,
+        name,
+        role,
+        photo || null,
+        index,
+      ],
     );
   }
 
@@ -269,7 +311,7 @@ try {
     `INSERT INTO dashboard (
       id, focus, operations_pulse, donation_commitments, message_sla,
       message_tips, analytics, metric_meta
-    ) VALUES ('singleton', $1,$2,$3,$4,$5,$6,$7)
+    ) VALUES ('singleton', $1::jsonb,$2::jsonb,$3::jsonb,$4::jsonb,$5::jsonb,$6::jsonb,$7::jsonb)
     ON CONFLICT (id) DO UPDATE SET
       focus = EXCLUDED.focus,
       operations_pulse = EXCLUDED.operations_pulse,
@@ -279,13 +321,13 @@ try {
       analytics = EXCLUDED.analytics,
       metric_meta = EXCLUDED.metric_meta`,
     [
-      dashboard.focus || {},
-      dashboard.operationsPulse || {},
-      dashboard.donationCommitments || [],
-      dashboard.messageSla || [],
-      dashboard.messageTips || [],
-      dashboard.analytics || {},
-      dashboard.metricMeta || [],
+      toJson(dashboard.focus, {}),
+      toJson(dashboard.operationsPulse, {}),
+      toJson(dashboard.donationCommitments, []),
+      toJson(dashboard.messageSla, []),
+      toJson(dashboard.messageTips, []),
+      toJson(dashboard.analytics, {}),
+      toJson(dashboard.metricMeta, []),
     ],
   );
 
