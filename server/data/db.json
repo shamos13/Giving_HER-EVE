@@ -52,12 +52,15 @@
   "stories": [
     {
       "id": "s1",
-      "title": "Empowering Smiles",
+      "title": "Illula Primary Girl's Empowerment",
       "excerpt": "Education support that kept students learning",
-      "content": "Our education team partnered with local schools to provide scholarships, learning kits, and mentoring that restored attendance and confidence for students at risk of dropping out.",
+      "content": "Our education team partnered with local schools to provide scholarships, learning kits, and mentoring that restored attendance and confidence for students at risk of dropping out.<div>We managed to Distribute Over 100 kits re usable menstruration kits</div>",
       "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014537/2_wbwtmj.avif",
       "status": "Published",
-      "campaignId": "2"
+      "campaignId": "2",
+      "area": "Menses Kits",
+      "date": "17/05/2025",
+      "location": "Eldoret"
     },
     {
       "id": "s2",
@@ -94,6 +97,18 @@
       "imageUrl": "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014550/5_wtvump.avif",
       "status": "Published",
       "campaignId": "1"
+    },
+    {
+      "id": "s6",
+      "title": "Kitale Women's Visit",
+      "excerpt": "jadjbajsdkabidbiabscsac",
+      "content": "skbduuiebakb abdbabisdbis lsndoahodhf s basbidbad client:733 [vite] connecting...<div>client:826 [vite] connected.</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div><div>client:733 [vite] connecting...</div><div>client:826 [vite] connected.</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div></div><div><div>client:733 [vite] connecting...</div><div>client:826 [vite] connected.</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div></div><div><div>client:733 [vite] connecting...</div><div>client:826 [vite] connected.</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/testimonials:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div><div>:8080/api/stories:1&nbsp; Failed to load resource: net::ERR_CONNECTION_REFUSED</div></div><div><br></div>",
+      "imageUrl": "",
+      "status": "Published",
+      "campaignId": "",
+      "area": "",
+      "date": "",
+      "location": ""
     }
   ],
   "testimonials": [
@@ -641,6 +656,46 @@
           "id": "sponsor-6",
           "name": "Ripple",
           "icon": ""
+        }
+      ]
+    },
+    "team": {
+      "items": [
+        {
+          "id": "team-1",
+          "name": "Patience Chacha Mandela",
+          "role": "Founder / C.E.O",
+          "photo": ""
+        },
+        {
+          "id": "team-2",
+          "name": "Nelson Kimani Mandela",
+          "role": "Treasurer & Chairman",
+          "photo": ""
+        },
+        {
+          "id": "team-3",
+          "name": "Joylois Kwatuha",
+          "role": "Project Manager",
+          "photo": ""
+        },
+        {
+          "id": "team-4",
+          "name": "Precious Chacha",
+          "role": "Secretary & Administrator",
+          "photo": ""
+        },
+        {
+          "id": "team-5",
+          "name": "Beverly Chacha",
+          "role": "Social Media Strategist",
+          "photo": ""
+        },
+        {
+          "id": "team-6",
+          "name": "Amos Kwatuha",
+          "role": "Technical Advisor",
+          "photo": ""
         }
       ]
     }
