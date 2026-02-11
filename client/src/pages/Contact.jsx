@@ -6,7 +6,13 @@ import {Input} from "@headlessui/react";
 import FAQs from "../components/FAQs.jsx";
 import NewsLetter from "../components/NewsLetter.jsx";
 import Footer from "../components/Footer.jsx";
-import { fetchOrganization } from "../services/api";
+import { fetchOrganization, isServerUnreachable } from "../services/api";
+
+const fallbackOrganization = {
+    address: "Nairobi, Kenya",
+    phone: "+254 792 496622",
+    email: "info@givinghereve.org",
+};
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -18,19 +24,35 @@ const Contact = () => {
         message: "",
     });
     const [organization, setOrganization] = useState(null);
+    const [orgLoading, setOrgLoading] = useState(false);
     const [orgError, setOrgError] = useState(null);
+    const [useFallbackOrganization, setUseFallbackOrganization] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
         async function loadOrganization() {
+            setOrgLoading(true);
+            setOrgError(null);
+            setUseFallbackOrganization(false);
             try {
                 const data = await fetchOrganization();
                 if (!cancelled) {
-                    setOrganization(data);
+                    if (data && Object.keys(data).length > 0) {
+                        setOrganization(data);
+                    } else {
+                        setOrganization(null);
+                    }
                 }
             } catch (err) {
                 if (!cancelled) {
                     setOrgError(err instanceof Error ? err.message : "Failed to load contact info");
+                    if (isServerUnreachable(err)) {
+                        setUseFallbackOrganization(true);
+                    }
+                }
+            } finally {
+                if (!cancelled) {
+                    setOrgLoading(false);
                 }
             }
         }
@@ -55,32 +77,29 @@ const Contact = () => {
         // Handle form submission here
     };
 
-
-    const fallbackOrganization = {
-        address: "Nairobi, Kenya",
-        phone: "+254 792 496622",
-        email: "info@givinghereve.org",
-    };
-
-    const org = organization && Object.keys(organization).length > 0 ? organization : fallbackOrganization;
+    const org = organization && Object.keys(organization).length > 0
+        ? organization
+        : useFallbackOrganization
+            ? fallbackOrganization
+            : {};
 
     const contactInfo = [
         {
             icon: <MapPin className="h-6 w-6"/>,
             title:"Our location",
-            details:[org.address || fallbackOrganization.address, "East Africa"],
+            details:[org.address || "Not available", "East Africa"],
             description: "Visit Us or Meet Us in the field"
         },
         {
             icon: <Phone className="h-6 w-6"/>,
             title:"Phone",
-            details:[org.phone || fallbackOrganization.phone],
+            details:[org.phone || "Not available"],
             description: "Call us during business hours for immediate assistance"
         },
         {
             icon: <Mail className="h-6 w-6"/>,
             title:"Email",
-            details:[org.email || fallbackOrganization.email],
+            details:[org.email || "Not available"],
             description: "Send us an email and we'll respond within 24 hours"
         },
         /* {
@@ -144,8 +163,14 @@ const Contact = () => {
                     <p className="text-xl text-[#637081] max-w-2xl mx-auto text-balance">
                         Multiple ways to reach us - choose what works best for you.
                     </p>
+                    {orgLoading && (
+                        <p className="mt-3 text-sm text-slate-500">Loading contact info...</p>
+                    )}
                     {orgError && (
                         <p className="mt-3 text-sm text-rose-600">Error: {orgError}</p>
+                    )}
+                    {!orgLoading && useFallbackOrganization && (
+                        <p className="mt-2 text-sm text-amber-600">Server unreachable. Showing offline fallback contact details.</p>
                     )}
                 </div>
 
