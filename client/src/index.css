@@ -9,7 +9,7 @@
 }
 
 /* Global animations and transitions */
-* {
+html {
     scroll-behavior: smooth;
 }
 
@@ -33,7 +33,9 @@
 
 /* Smooth transitions for all interactive elements */
 button, a, input, textarea {
-    transition: all 0.3s ease;
+    transition-property: background-color, border-color, color, opacity, transform, box-shadow;
+    transition-duration: 0.25s;
+    transition-timing-function: ease;
 }
 
 /* Hover effects for better UX */
@@ -144,6 +146,20 @@ textarea:focus {
 
 .loading {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 .rich-text p {

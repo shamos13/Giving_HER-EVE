@@ -10,13 +10,10 @@ import {
   createAdminCampaign,
   deleteAdminCampaign,
   fetchAdminCampaigns,
+  uploadAdminImage,
   updateAdminCampaign,
   type CampaignDto,
 } from "../../services/api"
-
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? ""
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET ?? ""
-const CLOUDINARY_ENABLED = Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET)
 
 type ActiveId = string | "new"
 
@@ -58,25 +55,6 @@ function statusTone(status?: string) {
   if (status === "Active") return "bg-emerald-100 text-emerald-700"
   if (status === "Draft") return "bg-amber-100 text-amber-700"
   return "bg-slate-100 text-slate-600"
-}
-
-async function uploadImage(file: File): Promise<string> {
-  if (!CLOUDINARY_ENABLED) {
-    throw new Error("Cloudinary upload is not configured.")
-  }
-  const formData = new FormData()
-  formData.append("file", file)
-  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET)
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`, {
-    method: "POST",
-    body: formData,
-  })
-  const data = await res.json()
-  if (!res.ok) {
-    const message = data?.error?.message ?? "Image upload failed"
-    throw new Error(message)
-  }
-  return data.secure_url || data.url
 }
 
 function ProgramsPage(): JSX.Element {
@@ -187,8 +165,11 @@ function ProgramsPage(): JSX.Element {
     setError(null)
     setSuccess(null)
     try {
-      const url = await uploadImage(file)
-      setCampaignDraft(prev => ({ ...prev, image: url }))
+      const photo = await uploadAdminImage(file, {
+        folder: "campaigns",
+        title: campaignDraft.title || undefined,
+      })
+      setCampaignDraft(prev => ({ ...prev, image: photo.imageUrl }))
       setSuccess("Image uploaded.")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload image")
@@ -428,15 +409,10 @@ function ProgramsPage(): JSX.Element {
                     if (!file) return
                     void handleImageUpload(file)
                   }}
-                  disabled={!CLOUDINARY_ENABLED || uploadingTarget === "campaign"}
+                  disabled={uploadingTarget === "campaign"}
                   className="text-xs"
                 />
                 {uploadingTarget === "campaign" && <p className="text-[11px] text-slate-500">Uploading image...</p>}
-                {!CLOUDINARY_ENABLED && (
-                  <p className="text-[11px] text-amber-600">
-                    Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to enable uploads.
-                  </p>
-                )}
               </div>
             </div>
           </div>
