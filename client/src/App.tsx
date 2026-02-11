@@ -19,6 +19,7 @@ const ContentPage = lazy(() => import("./pages/dashboard/ContentPage"))
 const MessagesPage = lazy(() => import("./pages/dashboard/MessagesPage"))
 const AnalyticsPage = lazy(() => import("./pages/dashboard/AnalyticsPage"))
 const SettingsPage = lazy(() => import("./pages/dashboard/SettingsPage"))
+const DashboardGuide = lazy(() => import("./pages/dashboard/DashboardGuide"))
 
 function RouteFallback(): JSX.Element {
   return (
@@ -58,6 +59,7 @@ function App(): JSX.Element {
             <Route path="messages" element={<MessagesPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="guide" element={<DashboardGuide />} />
           </Route>
         </Routes>
       </Suspense>

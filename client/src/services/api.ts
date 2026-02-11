@@ -117,6 +117,15 @@ export interface MessageDto {
   createdAt: string;
 }
 
+export interface ContactMessagePayload {
+  name: string;
+  email: string;
+  phone?: string;
+  subject?: string;
+  inquiryType?: string;
+  message: string;
+}
+
 export interface MessageInsights {
   sla: { label: string; value: string; tone: "green" | "amber" | "blue"; progress: number }[];
   tips: string[];
@@ -561,6 +570,20 @@ export async function fetchGalleryPhotos(params?: { albumId?: string }): Promise
 export async function fetchOrganization(): Promise<OrganizationDto> {
   const res = await fetch(`${API_BASE_URL}/api/organization`);
   return handleResponse<OrganizationDto>(res);
+}
+
+export async function createMessage(payload: ContactMessagePayload): Promise<MessageDto> {
+  const res = await fetch(`${API_BASE_URL}/api/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (res.status === 404) {
+    throw new Error("Message endpoint is not deployed yet. Redeploy the backend service on Render.")
+  }
+  return handleResponse<MessageDto>(res);
 }
 
 export async function fetchSponsors(): Promise<SponsorDto[]> {
