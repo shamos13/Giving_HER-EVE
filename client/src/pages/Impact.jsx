@@ -3,13 +3,9 @@ import { Link } from "react-router";
 import { ArrowRight, Search, Share2 } from "lucide-react";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-import { fetchStories } from "../services/api";
+import { fetchStories, isRecoverableApiError } from "../services/api";
 import { IMPACT_AREAS, IMPACT_STORIES_FALLBACK, IMPACT_STORY_DETAILS } from "../data/impactStories";
-
-const cloudinaryTransform = (src, transform) => {
-  if (!src) return src;
-  return src.includes("/upload/") ? src.replace("/upload/", `/upload/${transform}/`) : src;
-};
+import { getResponsiveImage } from "../utils/image";
 
 const IMPACT_STATS = [
   { label: "Women & girls supported", value: "2,500+" },
@@ -29,44 +25,58 @@ const FALLBACK_DATES = [
   "Nov 18, 2023",
 ];
 
-const ImpactStoryCard = ({ story, tone }) => (
-  <article
-    id={`story-${story.id}`}
-    className="group overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-shadow"
-  >
-    <div className="relative overflow-hidden">
-      <img
-        src={cloudinaryTransform(story.imageUrl, "f_auto,q_auto,w_800,h_520,c_fill")}
-        alt={story.title}
-        className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-        loading="lazy"
-      />
-      <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>
-        {story.area}
-      </span>
-    </div>
-    <div className="p-5">
-      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-        <span>{story.location}</span>
-        <span>{story.date}</span>
+const ImpactStoryCard = ({ story, tone }) => {
+  const image = getResponsiveImage(story.imageUrl, {
+    widths: [320, 460, 640, 820],
+    aspectRatio: 800 / 520,
+    sizes: "(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw",
+  });
+
+  return (
+    <article
+      id={`story-${story.id}`}
+      className="group overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-shadow"
+    >
+      <div className="relative overflow-hidden">
+        <img
+          src={image.src}
+          srcSet={image.srcSet}
+          sizes={image.sizes}
+          alt={story.title}
+          className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          loading="lazy"
+          decoding="async"
+          width={820}
+          height={533}
+        />
+        <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold ${tone}`}>
+          {story.area}
+        </span>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{story.title}</h3>
-      <p className="text-sm text-gray-600 mb-4">{story.excerpt}</p>
-      <Link
-        to={`/impact/${story.id}`}
-        className="inline-flex items-center text-sm font-semibold text-[#6A0DAD] hover:text-[#4B0B7A] transition-colors"
-      >
-        Read full story
-        <ArrowRight className="ml-1 w-4 h-4" />
-      </Link>
-    </div>
-  </article>
-);
+      <div className="p-5">
+        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+          <span>{story.location}</span>
+          <span>{story.date}</span>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{story.title}</h3>
+        <p className="text-sm text-gray-600 mb-4">{story.excerpt}</p>
+        <Link
+          to={`/impact/${story.id}`}
+          className="inline-flex items-center text-sm font-semibold text-[#6A0DAD] hover:text-[#4B0B7A] transition-colors"
+        >
+          Read full story
+          <ArrowRight className="ml-1 w-4 h-4" />
+        </Link>
+      </div>
+    </article>
+  );
+};
 
 const Impact = () => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [useFallbackStories, setUseFallbackStories] = useState(false);
   const [activeArea, setActiveArea] = useState("All Stories");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -76,13 +86,16 @@ const Impact = () => {
     async function load() {
       setLoading(true);
       setError(null);
+      setUseFallbackStories(false);
       try {
         const data = await fetchStories();
         if (cancelled) return;
-        setStories(data);
+        setStories(Array.isArray(data) ? data : []);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load stories");
+          const recoverable = isRecoverableApiError(err);
+          setError(recoverable ? null : "Unable to load stories right now.");
+          setUseFallbackStories(recoverable);
         }
       } finally {
         if (!cancelled) {
@@ -97,18 +110,22 @@ const Impact = () => {
   }, []);
 
   const normalizedStories = useMemo(() => {
-    const base = stories.length > 0 ? stories : IMPACT_STORIES_FALLBACK;
+    const base = stories.length > 0
+      ? stories
+      : useFallbackStories
+        ? IMPACT_STORIES_FALLBACK
+        : [];
     return base.map((story, index) => {
-      const details = IMPACT_STORY_DETAILS[story.id];
+      const details = useFallbackStories ? IMPACT_STORY_DETAILS[story.id] : null;
       return {
         ...story,
-        area: story.area ?? details?.area ?? IMPACT_AREAS[index % IMPACT_AREAS.length].label,
+        area: story.area ?? details?.area ?? "Impact Story",
         tone: IMPACT_AREAS[index % IMPACT_AREAS.length].tone,
-        date: story.date ?? details?.date ?? FALLBACK_DATES[index % FALLBACK_DATES.length],
-        location: story.location ?? details?.location ?? "East Africa",
+        date: story.date ?? details?.date ?? (useFallbackStories ? FALLBACK_DATES[index % FALLBACK_DATES.length] : "Date TBD"),
+        location: story.location ?? details?.location ?? "Location TBD",
       };
     });
-  }, [stories]);
+  }, [stories, useFallbackStories]);
 
   const filteredStories = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -125,6 +142,11 @@ const Impact = () => {
   }, [activeArea, searchTerm]);
 
   const [featuredStory, ...remainingStories] = filteredStories;
+  const featuredImage = getResponsiveImage(featuredStory?.imageUrl, {
+    widths: [640, 960, 1280, 1600],
+    aspectRatio: 3 / 2,
+    sizes: "(max-width: 1023px) 100vw, 60vw",
+  });
   const pageSize = 6;
   const totalPages = Math.max(1, Math.ceil(remainingStories.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -204,15 +226,25 @@ const Impact = () => {
           </div>
 
           {loading && <p className="text-sm text-gray-500">Loading stories...</p>}
-          {error && <p className="text-sm text-rose-600">Error: {error}</p>}
+          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {!loading && useFallbackStories && (
+            <p className="text-sm text-amber-600">Live stories are temporarily unavailable. Showing fallback stories.</p>
+          )}
 
           {featuredStory ? (
             <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] items-stretch mb-12">
               <div className="relative overflow-hidden rounded-3xl shadow-lg">
                 <img
-                  src={cloudinaryTransform(featuredStory.imageUrl, "f_auto,q_auto,w_1200,h_800,c_fill")}
+                  src={featuredImage.src}
+                  srcSet={featuredImage.srcSet}
+                  sizes={featuredImage.sizes}
                   alt={featuredStory.title}
                   className="h-full w-full object-cover"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  width={1600}
+                  height={1067}
                 />
               </div>
               <div className="rounded-3xl bg-white border border-gray-100 p-8 shadow-lg flex flex-col">

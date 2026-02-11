@@ -4,9 +4,13 @@ const Community = ()=>{
             {/* Background Image with Overlay */}
             <div className="absolute h-full inset-0 z-0 ">
                 <img
-                    src="community.jpg"
+                    src="community.webp"
                     alt="Smiling Girl"
                     className="w-full h-full object-content aspect-3/2"
+                    loading="lazy"
+                    decoding="async"
+                    width={1920}
+                    height={1080}
                 />
                 {/* Gradient */}
                 <div className="absolute inset-0 bg-linear-to-r from-[#6A0DAD]/60 via-[#6A0DAD]/60 "/>
@@ -31,6 +35,10 @@ const Community = ()=>{
                     src="group_love.png"
                     alt="Hand Heart Icon"
                     className="w-auto h-48"
+                    loading="lazy"
+                    decoding="async"
+                    width={192}
+                    height={192}
                 />
             </div>
             <div className="absolute bottom-0 left-20 z-10 hidden lg:block">
@@ -38,6 +46,10 @@ const Community = ()=>{
                     src="group_m.png"
                     alt="Hand Heart Icon"
                     className="w-full h-48"
+                    loading="lazy"
+                    decoding="async"
+                    width={192}
+                    height={192}
                 />
             </div>
         </div>

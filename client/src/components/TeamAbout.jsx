@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaInstagram, FaTwitter, FaLinkedin, FaFacebook } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import robi from "../assets/team-member-1.jpg"
 import nelson from "../assets/team-member-2.jpg"
 import joy from "../assets/team-member-3.jpg"
 import wankio from "../assets/team-member-4.jpg"
 import amos from "../assets/team-member-5.jpg"
+import { fetchTeam, isRecoverableApiError } from "../services/api"
 
-const teamMembers = [
+const FALLBACK_TEAM_MEMBERS = [
     {
         name: "Patience Chacha Mandela",
         role: "Founder / C.E.O",
@@ -31,7 +32,7 @@ const teamMembers = [
     {
         name: "Beverly Chacha",
         role: "Social Media Strategist",
-        image: "4.avif"
+        image: amos
     },
     {
         name: "Amos Kwatuha",
@@ -40,158 +41,175 @@ const teamMembers = [
     }
 ];
 
-export default function TeamAbout() {
-    const [currentPage, setCurrentPage] = useState(0);
+function applyCloudinaryTransform(url, transform) {
+    if (typeof url !== "string" || !url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
+        return url;
+    }
+    return url.replace("/upload/", `/upload/${transform}/`);
+}
 
-    const handlePrev = () => {
-        setCurrentPage((prev) => (prev > 0 ? prev - 1 : prev));
-    };
+function getTeamImageVariants(url) {
+    if (typeof url !== "string" || !url.trim()) {
+        return { src: "", srcSet: undefined, sizes: undefined };
+    }
 
-    const handleNext = () => {
-        setCurrentPage((prev) => (prev < 1 ? prev + 1 : prev));
+    const trimmed = url.trim();
+    if (!trimmed.includes("res.cloudinary.com") || !trimmed.includes("/upload/")) {
+        return { src: trimmed, srcSet: undefined, sizes: undefined };
+    }
+
+    const build = (size) =>
+        applyCloudinaryTransform(trimmed, `c_fill,g_auto,h_${size},w_${size},f_auto,q_auto`);
+
+    return {
+        src: build(480),
+        srcSet: `${build(320)} 320w, ${build(480)} 480w, ${build(640)} 640w`,
+        sizes: "(max-width: 640px) 250px, 300px",
     };
+}
+
+export default function TeamAbout({ compact = false }) {
+    const reduceMotion = useReducedMotion();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [teamMembersData, setTeamMembersData] = useState([]);
+    const [useFallbackMembers, setUseFallbackMembers] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function load() {
+            setLoading(true);
+            setError(null);
+            setUseFallbackMembers(false);
+            try {
+                const data = await fetchTeam();
+                if (cancelled) return;
+                setTeamMembersData(Array.isArray(data) ? data : []);
+            } catch (err) {
+                if (!cancelled) {
+                    const recoverable = isRecoverableApiError(err);
+                    setTeamMembersData([]);
+                    setError(recoverable ? null : "Unable to load team members right now.");
+                    setUseFallbackMembers(recoverable);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        }
+        void load();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const teamMembers = useMemo(() => {
+        const liveMembers = teamMembersData.map((member, index) => ({
+            name: member.name || `Team Member ${index + 1}`,
+            role: member.role || "Team Member",
+            ...getTeamImageVariants(member.photo || ""),
+        }));
+        if (liveMembers.length > 0) return liveMembers;
+        return useFallbackMembers
+            ? FALLBACK_TEAM_MEMBERS.map((member) => ({ ...member, src: member.image, srcSet: undefined, sizes: undefined }))
+            : [];
+    }, [teamMembersData, useFallbackMembers]);
 
     return (
-        <section className="max-w-7xl mx-auto py-12 md:py-16 px-4 sm:px-6 text-center">
+        <section className={`max-w-7xl mx-auto px-4 sm:px-6 text-center ${compact ? "py-10 md:py-12" : "py-12 md:py-16"}`}>
             {/* Heading */}
             <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+                whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                transition={reduceMotion ? undefined : { duration: 0.45, ease: "easeOut" }}
                 viewport={{ once: true }}
             >
-                <motion.h2 
-                    className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    viewport={{ once: true }}
-                >
-                    Meet Our <motion.span 
-                        className="relative inline-block"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        viewport={{ once: true }}
-                    >
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+                    Meet Our <span className="relative inline-block">
                         Devoted
-                        <motion.span 
-                            className="absolute left-0 bottom-0 w-full h-2 bg-yellow-300 -z-10"
-                            initial={{ width: 0 }}
-                            whileInView={{ width: "100%" }}
-                            transition={{ duration: 0.8, delay: 0.6 }}
-                            viewport={{ once: true }}
-                        ></motion.span>
-                    </motion.span> Team
-                </motion.h2>
-                <motion.p 
-                    className="text-gray-600 max-w-2xl mx-auto mb-8 md:mb-12 text-sm sm:text-base"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    viewport={{ once: true }}
-                >
+                        <span className="absolute left-0 bottom-0 w-full h-2 bg-yellow-300 -z-10"></span>
+                    </span> Team
+                </h2>
+                <p className={`text-gray-600 max-w-2xl mx-auto text-sm sm:text-base ${compact ? "mb-6 md:mb-8" : "mb-8 md:mb-12"}`}>
                     They are the backbone of our mission, combining compassion, expertise, and dedication to empower women and girls with equality, voice, and empowerment across underserved communities.
-                </motion.p>
+                </p>
             </motion.div>
 
             {/* Horizontal Scrollable Team */}
-            <motion.div 
-                className="flex items-center gap-6 md:gap-8 overflow-x-auto pb-4 scrollbar-hide"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                viewport={{ once: true }}
-            >
-                {teamMembers.map((member, index) => (
+            {loading && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                    Loading team members...
+                </div>
+            )}
+            {!loading && error && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-600">
+                    Unable to load team members right now.
+                </div>
+            )}
+            {!loading && useFallbackMembers && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    Live team data is temporarily unavailable. Showing fallback team members.
+                </div>
+            )}
+            {!loading && !error && teamMembers.length === 0 && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                    Team members coming soon.
+                </div>
+            )}
+            <div className={`flex items-center overflow-x-auto pb-4 scrollbar-hide ${compact ? "gap-5 md:gap-6" : "gap-6 md:gap-8"}`}>
+                {!loading && teamMembers.map((member, index) => (
                     <motion.div
                         key={index}
-                        className="min-w-[250px] sm:min-w-[300px] bg-purple-50 rounded-xl shadow-md border border-purple-300 hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
-                        initial={{ opacity: 0, x: 50, scale: 0.9 }}
-                        whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
-                        viewport={{ once: true }}
-                        whileHover={{ 
-                            y: -10, 
-                            scale: 1.02,
-                            transition: { duration: 0.3 }
-                        }}
+                        className={`group bg-purple-50 rounded-xl shadow-md border border-purple-300 hover:shadow-lg transition-[transform,box-shadow] duration-200 flex flex-col overflow-hidden ${compact ? "min-w-[230px] sm:min-w-[260px]" : "min-w-[250px] sm:min-w-[300px]"}`}
+                        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                        transition={
+                            reduceMotion
+                                ? undefined
+                                : { duration: 0.35, delay: Math.min(index * 0.05, 0.2), ease: "easeOut" }
+                        }
+                        viewport={{ once: true, amount: 0.25 }}
+                        whileHover={reduceMotion ? undefined : { y: -4 }}
                     >
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.3 }}
-                        >
+                        <div className="overflow-hidden">
                             <img
-                                src={member.image}
+                                src={member.src}
+                                srcSet={member.srcSet}
+                                sizes={member.sizes}
                                 alt={member.name}
-                                className="w-full h-64 md:h-72 object-cover"
+                                loading="lazy"
+                                decoding="async"
+                                width={480}
+                                height={480}
+                                className={`w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] ${compact ? "h-56 md:h-64" : "h-64 md:h-72"}`}
                             />
-                        </motion.div>
-                        <motion.div 
-                            className="p-4 md:p-6 bg-white"
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                            viewport={{ once: true }}
-                        >
-                            <motion.h3 
-                                className="text-base md:text-lg font-semibold mb-2"
-                                initial={{ opacity: 0 }}
-                                whileInView={{ opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-                                viewport={{ once: true }}
-                            >
+                        </div>
+                        <div className="p-4 md:p-6 bg-white">
+                            <h3 className="text-base md:text-lg font-semibold mb-2">
                                 {member.name}
-                            </motion.h3>
-                            <motion.p 
-                                className="text-gray-500 mb-4 text-sm md:text-base"
-                                initial={{ opacity: 0 }}
-                                whileInView={{ opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                                viewport={{ once: true }}
-                            >
+                            </h3>
+                            <p className="text-gray-500 mb-4 text-sm md:text-base">
                                 {member.role}
-                            </motion.p>
-                            <motion.div 
-                                className="flex justify-center gap-3 md:gap-4 text-purple-600 text-lg md:text-xl"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                                viewport={{ once: true }}
-                            >
-                                <motion.div
-                                    whileHover={{ scale: 1.2, rotate: 5 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    transition={{ duration: 0.2 }}
-                                >
+                            </p>
+                            <div className="flex justify-center gap-3 md:gap-4 text-purple-600 text-lg md:text-xl">
+                                <div className="transition-transform duration-150 hover:scale-110 active:scale-95">
                                     <FaInstagram className="hover:text-pink-500 cursor-pointer transition-colors duration-300" />
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.2, rotate: 5 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    transition={{ duration: 0.2 }}
-                                >
+                                </div>
+                                <div className="transition-transform duration-150 hover:scale-110 active:scale-95">
                                     <FaTwitter className="hover:text-blue-400 cursor-pointer transition-colors duration-300" />
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.2, rotate: 5 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    transition={{ duration: 0.2 }}
-                                >
+                                </div>
+                                <div className="transition-transform duration-150 hover:scale-110 active:scale-95">
                                     <FaLinkedin className="hover:text-blue-600 cursor-pointer transition-colors duration-300" />
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.2, rotate: 5 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    transition={{ duration: 0.2 }}
-                                >
+                                </div>
+                                <div className="transition-transform duration-150 hover:scale-110 active:scale-95">
                                     <FaFacebook className="hover:text-blue-500 cursor-pointer transition-colors duration-300" />
-                                </motion.div>
-                            </motion.div>
-                        </motion.div>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
                 ))}
-            </motion.div>
+            </div>
         </section>
     );
 }

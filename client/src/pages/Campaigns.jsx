@@ -2,9 +2,12 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 import PartnerStrip from "../components/PartnerStrip.jsx";
+import DeferredMount from "../components/DeferredMount.jsx";
 import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { Link } from "react-router";
-import { fetchActiveCampaigns } from "../services/api";
+import { fetchActiveCampaigns, isRecoverableApiError } from "../services/api";
+import { getResponsiveImage } from "../utils/image";
+import { FALLBACK_CAMPAIGNS } from "../data/fallbackCampaigns";
 const SuccessStories = lazy(() => import("../components/SuccessStories.jsx"));
 const Team = lazy(() => import("../components/Team.jsx"));
 const NewsLetter = lazy(() => import("../components/NewsLetter.jsx"));
@@ -69,6 +72,7 @@ const ActiveCampaigns = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [useFallbackCampaigns, setUseFallbackCampaigns] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All Campaigns");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -77,13 +81,17 @@ const ActiveCampaigns = () => {
     async function load() {
       setLoading(true);
       setError(null);
+      setUseFallbackCampaigns(false);
       try {
         const data = await fetchActiveCampaigns();
         if (cancelled) return;
-        setCampaigns(data);
+        setCampaigns(Array.isArray(data) ? data : []);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load campaigns");
+          const recoverable = isRecoverableApiError(err);
+          setCampaigns(recoverable ? FALLBACK_CAMPAIGNS : []);
+          setUseFallbackCampaigns(recoverable);
+          setError(recoverable ? null : "Unable to load campaigns right now.");
         }
       } finally {
         if (!cancelled) {
@@ -154,52 +162,70 @@ const ActiveCampaigns = () => {
             ))}
           </div>
           {loading && <p className="text-sm text-gray-500">Loading campaigns...</p>}
-          {error && <p className="text-sm text-rose-600">Error: {error}</p>}
+          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {!loading && useFallbackCampaigns && (
+            <p className="text-sm text-amber-600">
+              Live campaigns are temporarily unavailable. Showing fallback campaigns.
+            </p>
+          )}
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCampaigns.map((campaign) => (
-            <Link
-              key={campaign.id}
-              to={`/campaigns/${campaign.id}`}
-              className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group border border-gray-100"
-            >
-              <div className="relative w-full aspect-[16/10] overflow-hidden">
-                <img
-                  src={campaign.image}
-                  alt={campaign.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  loading="lazy"
-                />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
-                  <span className="text-[#7F19E6] font-bold text-[10px] uppercase tracking-wider">
-                    {campaign.category}
-                  </span>
+          {filteredCampaigns.map((campaign) => {
+            const image = getResponsiveImage(campaign.image, {
+              widths: [360, 520, 760, 980],
+              aspectRatio: 16 / 10,
+              sizes: "(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw",
+            });
+
+            return (
+              <Link
+                key={campaign.id}
+                to={`/campaigns/${campaign.id}`}
+                className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group border border-gray-100"
+              >
+                <div className="relative w-full aspect-[16/10] overflow-hidden">
+                  <img
+                    src={image.src}
+                    srcSet={image.srcSet}
+                    sizes={image.sizes}
+                    alt={campaign.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    decoding="async"
+                    width={980}
+                    height={612}
+                  />
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
+                    <span className="text-[#7F19E6] font-bold text-[10px] uppercase tracking-wider">
+                      {campaign.category}
+                    </span>
+                  </div>
+                  {campaign.label && (
+                    <span className="absolute top-4 right-4 rounded-full bg-[#F7B500] text-[10px] font-bold text-[#4A2A00] px-3 py-1 shadow-sm uppercase tracking-wide">
+                      {campaign.label}
+                    </span>
+                  )}
                 </div>
-                {campaign.label && (
-                  <span className="absolute top-4 right-4 rounded-full bg-[#F7B500] text-[10px] font-bold text-[#4A2A00] px-3 py-1 shadow-sm uppercase tracking-wide">
-                    {campaign.label}
-                  </span>
-                )}
-              </div>
-              <div className="p-6 flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#7F19E6] transition-colors">
-                  {campaign.title}
-                </h3>
-                <p className="text-sm text-gray-500 line-clamp-2">
-                  {campaign.shortDescription}
-                </p>
-                <ProgressBar raised={campaign.raised} goal={campaign.goal} />
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto text-xs">
-                  <span className="text-gray-500">{campaign.location}</span>
-                  <span className="inline-flex items-center gap-1 text-[#7F19E6] font-semibold">
-                    View details
-                    <ArrowRight className="h-3 w-3" />
-                  </span>
+                <div className="p-6 flex flex-col gap-4">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#7F19E6] transition-colors">
+                    {campaign.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 line-clamp-2">
+                    {campaign.shortDescription}
+                  </p>
+                  <ProgressBar raised={campaign.raised} goal={campaign.goal} />
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto text-xs">
+                    <span className="text-gray-500">{campaign.location}</span>
+                    <span className="inline-flex items-center gap-1 text-[#7F19E6] font-semibold">
+                      View details
+                      <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
           {!loading && filteredCampaigns.length === 0 && (
             <p className="text-sm text-gray-500">No campaigns match your filters right now.</p>
           )}
@@ -264,15 +290,21 @@ const Campaigns = () => {
         <ActiveCampaigns />
         <PartnerStrip />
         <TransparencySection />
-        <Suspense fallback={<div className="py-16" />}>
-          <SuccessStories />
-        </Suspense>
-        <Suspense fallback={<div className="py-16" />}>
-          <Team />
-        </Suspense>
-        <Suspense fallback={<div className="py-16" />}>
-          <NewsLetter />
-        </Suspense>
+        <DeferredMount fallback={<div className="py-16" />}>
+          <Suspense fallback={<div className="py-16" />}>
+            <SuccessStories />
+          </Suspense>
+        </DeferredMount>
+        <DeferredMount fallback={<div className="py-16" />}>
+          <Suspense fallback={<div className="py-16" />}>
+            <Team />
+          </Suspense>
+        </DeferredMount>
+        <DeferredMount fallback={<div className="py-16" />}>
+          <Suspense fallback={<div className="py-16" />}>
+            <NewsLetter />
+          </Suspense>
+        </DeferredMount>
       </main>
       <Footer />
     </div>

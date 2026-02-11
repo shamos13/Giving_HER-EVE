@@ -4,6 +4,7 @@ import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
 import { fetchCampaignById } from "../services/api";
+import { getResponsiveImage } from "../utils/image";
 
 const formatCurrency = (amount) =>
   new Intl.NumberFormat("en-US", {
@@ -103,6 +104,11 @@ const CampaignDetail = () => {
     "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014549/4_qcb19a.avif",
     "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014550/5_wtvump.avif",
   ];
+  const campaignHeroImage = getResponsiveImage(campaign.image, {
+    widths: [640, 960, 1280, 1680],
+    aspectRatio: 16 / 9,
+    sizes: "100vw",
+  });
 
   const donorList = [
     { name: "Sarah M.", amount: 50 },
@@ -131,9 +137,16 @@ const CampaignDetail = () => {
 
             <div className="relative overflow-hidden rounded-3xl shadow-[0_18px_50px_rgba(15,23,42,0.12)] border border-white/80">
               <img
-                src={campaign.image}
+                src={campaignHeroImage.src}
+                srcSet={campaignHeroImage.srcSet}
+                sizes={campaignHeroImage.sizes}
                 alt={campaign.title}
                 className="w-full h-72 md:h-96 object-cover"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                width={1680}
+                height={945}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6 text-white">
@@ -201,19 +214,32 @@ const CampaignDetail = () => {
                     </span>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {galleryImages.map((image, index) => (
-                      <div
-                        key={`${image}-${index}`}
-                        className="overflow-hidden rounded-2xl border border-gray-100"
-                      >
-                        <img
-                          src={image}
-                          alt={`${campaign.title} gallery ${index + 1}`}
-                          className="h-40 w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
+                    {galleryImages.map((image, index) => {
+                      const galleryImage = getResponsiveImage(image, {
+                        widths: [320, 480, 640],
+                        aspectRatio: 16 / 10,
+                        sizes: "(max-width: 640px) 100vw, 50vw",
+                      });
+
+                      return (
+                        <div
+                          key={`${image}-${index}`}
+                          className="overflow-hidden rounded-2xl border border-gray-100"
+                        >
+                          <img
+                            src={galleryImage.src}
+                            srcSet={galleryImage.srcSet}
+                            sizes={galleryImage.sizes}
+                            alt={`${campaign.title} gallery ${index + 1}`}
+                            className="h-40 w-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                            width={640}
+                            height={400}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

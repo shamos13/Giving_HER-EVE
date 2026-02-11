@@ -1,10 +1,19 @@
-import bg_image from "../assets/Image.png";
+import bg_image from "../assets/Image.webp";
 
 const NewsLetter = () => {
     return(
         <section className="relative mt-10 py-20 bg-[#6A0DAD] text-white">
-            <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-                 style={{backgroundImage: `url(${bg_image})`}}>
+            <div className="absolute z-0 inset-0 overflow-hidden">
+                <img
+                    src={bg_image}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full object-cover opacity-30"
+                    loading="lazy"
+                    decoding="async"
+                    width={1920}
+                    height={1080}
+                />
             </div>
 
             <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

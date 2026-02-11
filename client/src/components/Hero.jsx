@@ -1,5 +1,3 @@
-import React from 'react';
-import hero from '../assets/hero.png'
 const HeroSection = () => {
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -7,7 +5,7 @@ const HeroSection = () => {
             <div
                 className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
                 style={{
-                    backgroundImage: `url('/hero.png')`
+                    backgroundImage: `url('/hero.webp')`
                 }}
             />
 
@@ -20,6 +18,10 @@ const HeroSection = () => {
                     src="/hand_heart.png"
                     alt="Hand heart decoration"
                     className="w-24 h-24 object-contain opacity-90"
+                    loading="lazy"
+                    decoding="async"
+                    width={96}
+                    height={96}
                 />
             </div>
 
@@ -29,6 +31,10 @@ const HeroSection = () => {
                     src="/donation_bottle.png"
                     alt="Donation bottle decoration"
                     className="w-32 h-32 object-contain opacity-80"
+                    loading="lazy"
+                    decoding="async"
+                    width={128}
+                    height={128}
                 />
             </div>
 

@@ -1,0 +1,74 @@
+┌───────────────────────────────┐
+│           CLIENTS             │
+│                               │
+│  • Public Website (React)     │
+│  • Admin Dashboard (React)    │
+│  • Mobile / Future Apps       │
+└───────────────┬───────────────┘
+                │ HTTP / HTTPS
+                ▼
+┌───────────────────────────────┐
+│        EXPRESS API SERVER     │
+│        (Node.js Backend)      │
+│                               │
+│  ┌─────────────────────────┐ │
+│  │        MIDDLEWARE       │ │
+│  │────────────────────────│ │
+│  │ • CORS                  │ │
+│  │ • JSON Body Parser      │ │
+│  │ • Rate Limiting         │ │
+│  │ • Request Logging       │ │
+│  │ • Auth Middleware       │ │
+│  │   (JWT / Admin Roles)   │ │
+│  └─────────────┬───────────┘ │
+│                │             │
+│  ┌─────────────▼───────────┐ │
+│  │        ROUTES LAYER      │ │
+│  │────────────────────────│ │
+│  │ • /api/auth             │ │
+│  │ • /api/admin/messages   │ │
+│  │ • /api/donations        │ │
+│  │ • /api/blog / stories   │ │
+│  │ • /api/uploads          │ │
+│  └─────────────┬───────────┘ │
+│                │             │
+│  ┌─────────────▼───────────┐ │
+│  │      CONTROLLERS        │ │
+│  │────────────────────────│ │
+│  │ • Business logic        │ │
+│  │ • Validation            │ │
+│  │ • Error handling        │ │
+│  └─────────────┬───────────┘ │
+│                │             │
+│  ┌─────────────▼───────────┐ │
+│  │        SERVICES         │ │
+│  │────────────────────────│ │
+│  │ • Email Service         │ │
+│  │ • Payment Service      │ │
+│  │ • File Upload Service  │ │
+│  │ • Notification Service │ │
+│  └─────────────┬───────────┘ │
+│                │             │
+│  ┌─────────────▼───────────┐ │
+│  │       DATA ACCESS       │ │
+│  │────────────────────────│ │
+│  │ • SQL Queries           │ │
+│  │ • Transactions          │ │
+│  │ • Repository Pattern    │ │
+│  └─────────────┬───────────┘ │
+└────────────────┼─────────────┘
+                 │
+     ┌───────────┼───────────────┐
+     │           │               │
+     ▼           ▼               ▼
+┌──────────┐ ┌────────────┐ ┌──────────────┐
+│ SUPABASE │ │ EMAIL SMTP │ │ PAYMENT GATE │
+│ POSTGRES │ │ (Nodemailer│ │ (M-Pesa /    │
+│ DATABASE │ │  / API)    │ │  Stripe / paypal)     │
+└──────────┘ └────────────┘ └──────────────┘
+     │
+     ▼
+┌───────────────────────────────┐
+│        SUPABASE STORAGE       │
+│  (Images, Documents, Media)  │
+└───────────────────────────────┘

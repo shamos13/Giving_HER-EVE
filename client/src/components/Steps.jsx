@@ -30,16 +30,16 @@ const processSteps = [
 
 const Steps = () => {
     return (
-    <section className="py-20 bg-muted">
+    <section className="py-12 md:py-14 bg-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How We Work</h2>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
                     Our community-centered approach ensures sustainable impact and local ownership of programs.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {processSteps.map((step, index) => (
                     <div key={index} className="border-0 shadow-soft  rounded-lg border  shadow-sm">
                         <div className="p-6 text-center">
@@ -60,4 +60,3 @@ const Steps = () => {
 }
 
 export default Steps;
-

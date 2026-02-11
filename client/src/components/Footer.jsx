@@ -8,7 +8,15 @@ const Footer = ()=>{
                     {/* Organization Info */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center space-x-3 mb-6">
-                            <img src="logo.svg" alt="Logo" className="h-20 w-auto "/>
+                            <img
+                                src="logo.svg"
+                                alt="Logo"
+                                className="h-20 w-auto "
+                                loading="lazy"
+                                decoding="async"
+                                width={220}
+                                height={80}
+                            />
                         </div>
                         <p className="text-sm opacity-90 leading-relaxed mb-6 max-w-md">
                             Be the first to hear powerful stories, updates from the field,

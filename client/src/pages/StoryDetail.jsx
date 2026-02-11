@@ -3,13 +3,9 @@ import { Link, useParams } from "react-router";
 import { ArrowLeft, ArrowRight, Facebook, Instagram, Twitter, Share2 } from "lucide-react";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-import { fetchStories } from "../services/api";
+import { fetchStories, isRecoverableApiError } from "../services/api";
 import { IMPACT_STORIES_FALLBACK, IMPACT_STORY_DETAILS } from "../data/impactStories";
-
-const cloudinaryTransform = (src, transform) => {
-  if (!src) return src;
-  return src.includes("/upload/") ? src.replace("/upload/", `/upload/${transform}/`) : src;
-};
+import { getResponsiveImage } from "../utils/image";
 
 const stripHtml = (value) =>
   value ? value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
@@ -25,19 +21,23 @@ const StoryDetail = () => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [useFallbackStories, setUseFallbackStories] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
       setError(null);
+      setUseFallbackStories(false);
       try {
         const data = await fetchStories();
         if (cancelled) return;
-        setStories(data);
+        setStories(Array.isArray(data) ? data : []);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load story");
+          const recoverable = isRecoverableApiError(err);
+          setError(recoverable ? null : "Unable to load story details right now.");
+          setUseFallbackStories(recoverable);
         }
       } finally {
         if (!cancelled) {
@@ -55,10 +55,14 @@ const StoryDetail = () => {
     if (!id) return null;
     const found = stories.find((item) => item.id === id);
     if (found) return found;
-    return IMPACT_STORIES_FALLBACK.find((item) => item.id === id) ?? null;
-  }, [id, stories]);
+    if (useFallbackStories) {
+      return IMPACT_STORIES_FALLBACK.find((item) => item.id === id) ?? null;
+    }
+    return null;
+  }, [id, stories, useFallbackStories]);
 
-  const details = story ? IMPACT_STORY_DETAILS[story.id] : null;
+  const isFallbackStory = Boolean(story && useFallbackStories && stories.length === 0);
+  const details = isFallbackStory && story ? IMPACT_STORY_DETAILS[story.id] : null;
 
   const contentHtml = story?.content ?? "";
   const usesRichText = Boolean(contentHtml && /<[^>]+>/.test(contentHtml));
@@ -89,22 +93,44 @@ const StoryDetail = () => {
   ];
 
   const metaArea = story?.area ?? details?.area ?? "Community Support";
-  const metaDate = story?.date ?? details?.date ?? "2024";
-  const metaLocation = story?.location ?? details?.location ?? "East Africa";
+  const metaDate = story?.date ?? details?.date ?? "Date TBD";
+  const metaLocation = story?.location ?? details?.location ?? "Location TBD";
   const readTime = "5 min read";
 
   const relatedStories = useMemo(() => {
-    const base = stories.length > 0 ? stories : IMPACT_STORIES_FALLBACK;
+    const base = stories.length > 0
+      ? stories
+      : useFallbackStories
+        ? IMPACT_STORIES_FALLBACK
+        : [];
     return base.filter((item) => item.id !== id).slice(0, 2);
-  }, [stories, id]);
+  }, [stories, id, useFallbackStories]);
 
-  const heroImage = story ? cloudinaryTransform(story.imageUrl, "f_auto,q_auto,w_1800") : "";
+  const heroImage = getResponsiveImage(story?.imageUrl, {
+    widths: [720, 1080, 1440, 1800],
+    sizes: "100vw",
+  });
   const highlightQuote =
     details?.quote ??
     "Giving Her E.V.E didn't just give education; it amplified voices. Now that voice is used to speak for those who cannot.";
   const projectGallery = useMemo(() => {
     if (!story) return [];
-    const fallbackPool = IMPACT_STORIES_FALLBACK.filter((item) => item.id !== story.id);
+    const explicitGallery = Array.isArray(story.galleryImages) ? story.galleryImages : [];
+    if (explicitGallery.length > 0) {
+      const uniqueStoryImages = [];
+      const seenStoryImages = new Set();
+      for (const src of [story.imageUrl, ...explicitGallery]) {
+        if (!src || seenStoryImages.has(src)) continue;
+        uniqueStoryImages.push({ src, title: story.title });
+        seenStoryImages.add(src);
+        if (uniqueStoryImages.length >= 6) break;
+      }
+      return uniqueStoryImages;
+    }
+
+    const fallbackPool = useFallbackStories
+      ? IMPACT_STORIES_FALLBACK.filter((item) => item.id !== story.id)
+      : [];
     const pool = [story, ...fallbackPool];
     const unique = [];
     const seen = new Set();
@@ -115,7 +141,7 @@ const StoryDetail = () => {
       if (unique.length >= 6) break;
     }
     return unique;
-  }, [story]);
+  }, [story, useFallbackStories]);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -132,9 +158,16 @@ const StoryDetail = () => {
           <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mt-4">
             <div className="relative h-[340px] sm:h-[420px] md:h-[520px] bg-[#1B0D29] overflow-hidden">
               <img
-                src={heroImage}
+                src={heroImage.src}
+                srcSet={heroImage.srcSet}
+                sizes={heroImage.sizes}
                 alt={story?.title ?? "Impact story"}
                 className="w-full h-full object-cover"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                width={1800}
+                height={1080}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-8 sm:pb-10 text-white">
@@ -160,7 +193,10 @@ const StoryDetail = () => {
             </Link>
 
             {loading && <p className="text-sm text-gray-500 mt-4">Loading story...</p>}
-            {error && <p className="text-sm text-rose-600 mt-4">Error: {error}</p>}
+            {error && <p className="text-sm text-rose-600 mt-4">{error}</p>}
+            {!loading && useFallbackStories && (
+              <p className="text-sm text-amber-600 mt-2">Live story data is temporarily unavailable. Showing fallback story data.</p>
+            )}
             {!loading && !story && !error && <p className="text-sm text-gray-500 mt-6">Story not found.</p>}
 
             {story && (
@@ -190,19 +226,32 @@ const StoryDetail = () => {
                   <div className="mt-10">
                     <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">Project Gallery</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {projectGallery.map((item, index) => (
-                        <figure
-                          key={`${item.title}-${index}`}
-                          className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm"
-                        >
-                          <img
-                            src={cloudinaryTransform(item.src, "f_auto,q_auto,w_600,h_420,c_fill")}
-                            alt={item.title}
-                            className="w-full h-40 sm:h-44 object-cover"
-                            loading="lazy"
-                          />
-                        </figure>
-                      ))}
+                      {projectGallery.map((item, index) => {
+                        const galleryImage = getResponsiveImage(item.src, {
+                          widths: [320, 520, 680],
+                          aspectRatio: 600 / 420,
+                          sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+                        });
+
+                        return (
+                          <figure
+                            key={`${item.title}-${index}`}
+                            className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm"
+                          >
+                            <img
+                              src={galleryImage.src}
+                              srcSet={galleryImage.srcSet}
+                              sizes={galleryImage.sizes}
+                              alt={item.title}
+                              className="w-full h-40 sm:h-44 object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              width={680}
+                              height={476}
+                            />
+                          </figure>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -259,31 +308,44 @@ const StoryDetail = () => {
                       <Share2 className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="space-y-4">
-                      {relatedStories.map((item) => (
-                        <Link
-                          key={item.id}
-                          to={`/impact/${item.id}`}
-                          className="flex gap-3 rounded-xl border border-gray-100 hover:border-[#6A0DAD]/50 transition-colors overflow-hidden"
-                        >
-                          <img
-                            src={cloudinaryTransform(item.imageUrl, "f_auto,q_auto,w_200,h_140,c_fill")}
-                            alt={item.title}
-                            className="w-28 h-24 object-cover"
-                            loading="lazy"
-                          />
-                          <div className="py-2 pr-3 flex flex-col justify-between">
-                            <div>
-                              <p className="text-[11px] uppercase font-semibold text-[#6A0DAD] mb-1">
-                                {IMPACT_STORY_DETAILS[item.id]?.area ?? "Impact"}
+                      {relatedStories.map((item) => {
+                        const relatedImage = getResponsiveImage(item.imageUrl, {
+                          widths: [200, 280, 360],
+                          aspectRatio: 200 / 140,
+                          sizes: "112px",
+                        });
+
+                        return (
+                          <Link
+                            key={item.id}
+                            to={`/impact/${item.id}`}
+                            className="flex gap-3 rounded-xl border border-gray-100 hover:border-[#6A0DAD]/50 transition-colors overflow-hidden"
+                          >
+                            <img
+                              src={relatedImage.src}
+                              srcSet={relatedImage.srcSet}
+                              sizes={relatedImage.sizes}
+                              alt={item.title}
+                              className="w-28 h-24 object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              width={360}
+                              height={252}
+                            />
+                            <div className="py-2 pr-3 flex flex-col justify-between">
+                              <div>
+                                <p className="text-[11px] uppercase font-semibold text-[#6A0DAD] mb-1">
+                                  {item.area ?? (useFallbackStories ? IMPACT_STORY_DETAILS[item.id]?.area : null) ?? "Impact"}
+                                </p>
+                                <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                {item.date ?? (useFallbackStories ? IMPACT_STORY_DETAILS[item.id]?.date : null) ?? "Date TBD"}
                               </p>
-                              <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
                             </div>
-                            <p className="text-xs text-gray-500">
-                              {IMPACT_STORY_DETAILS[item.id]?.date ?? "2024"}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                          </Link>
+                        );
+                      })}
                       {relatedStories.length === 0 && (
                         <p className="text-sm text-gray-500">More initiatives coming soon.</p>
                       )}

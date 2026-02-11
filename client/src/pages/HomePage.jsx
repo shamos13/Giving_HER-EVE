@@ -1,22 +1,24 @@
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-import Testimonials from "../components/Testimonials.jsx";
-import SuccessStories from "../components/SuccessStories.jsx";
-import header_img from "../assets/header_img.png"
-import Community from "../components/Community.jsx";
-import bg_image from "../assets/Image.png"
+import bg_image from "../assets/Image.webp"
+import DeferredMount from "../components/DeferredMount.jsx";
 
-import {Plus, GraduationCap, Heart, ArrowLeft, ArrowRight} from "lucide-react";
-import Steps from "../components/Steps.jsx";
-import Team from "../components/Team.jsx";
-import Hero from "../components/Hero.jsx";
-import { motion } from "framer-motion";
-import {useEffect, useState} from "react";
+import {Plus, GraduationCap, Heart, Check, ArrowLeft, ArrowRight} from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router";
+import { getResponsiveImage } from "../utils/image";
+import { fetchActiveCampaigns, isRecoverableApiError } from "../services/api";
+import { FALLBACK_CAMPAIGNS } from "../data/fallbackCampaigns";
+
+const SuccessStories = lazy(() => import("../components/SuccessStories.jsx"));
+const Steps = lazy(() => import("../components/Steps.jsx"));
+const Testimonials = lazy(() => import("../components/Testimonials.jsx"));
+const Team = lazy(() => import("../components/Team.jsx"));
 
 const HERO_SLIDES = [
     {
-        image: "/hero.png",
+        image: "/hero.webp",
         headline: "Giving Her",
         highlight: "E . V . E ,",
         subline: "Equality, Voice & Empowerment",
@@ -45,8 +47,44 @@ const HERO_SLIDES = [
     }
 ];
 
+const formatCurrency = (amount = 0) =>
+    new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+    }).format(amount);
+
+const CampaignCardProgressBar = ({ raised, goal }) => {
+    const percentage = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
+
+    return (
+        <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-500 mb-2">
+                <span className="font-semibold text-gray-900">
+                    {formatCurrency(raised)}{" "}
+                    <span className="font-normal text-gray-500">
+                        raised of {formatCurrency(goal)} goal
+                    </span>
+                </span>
+                <span className="text-gray-500">{percentage}%</span>
+            </div>
+            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                    className="h-full bg-[#7F19E6] rounded-full transition-all duration-500"
+                    style={{ width: `${percentage}%` }}
+                />
+            </div>
+        </div>
+    );
+};
+
 const HeroSection = () => {
     const [current, setCurrent] = useState(0);
+    const currentSlideImage = getResponsiveImage(HERO_SLIDES[current].image, {
+        widths: [640, 960, 1280, 1600, 1920],
+        aspectRatio: 16 / 9,
+        sizes: "100vw",
+    });
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -55,26 +93,42 @@ const HeroSection = () => {
         return () => clearInterval(id);
     }, []);
 
+    useEffect(() => {
+        const nextSlide = HERO_SLIDES[(current + 1) % HERO_SLIDES.length];
+        if (!nextSlide?.image) return;
+        const nextSlideImage = getResponsiveImage(nextSlide.image, {
+            widths: [640, 960, 1280, 1600],
+            aspectRatio: 16 / 9,
+            sizes: "100vw",
+        });
+        const preloadImage = new window.Image();
+        preloadImage.src = nextSlideImage.src;
+    }, [current]);
+
     const goTo = (index) => setCurrent((index + HERO_SLIDES.length) % HERO_SLIDES.length);
 
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden mb-12 md:mb-20">
+        <section className="relative min-h-[78vh] md:min-h-[86vh] flex items-center justify-center overflow-hidden mb-8 md:mb-12">
             {/* Background Carousel */}
             <div className="absolute inset-0">
-                {HERO_SLIDES.map((slide, index) => (
-                    <motion.div
-                        key={slide.image}
-                        className="absolute inset-0"
+                <AnimatePresence mode="wait">
+                    <motion.img
+                        key={HERO_SLIDES[current].image}
+                        src={currentSlideImage.src}
+                        srcSet={currentSlideImage.srcSet}
+                        sizes={currentSlideImage.sizes}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 h-full w-full object-cover"
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: current === index ? 1 : 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        style={{
-                            backgroundImage: `url(${slide.image})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center"
-                        }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        loading={current === 0 ? "eager" : "lazy"}
+                        fetchPriority={current === 0 ? "high" : "auto"}
+                        decoding="async"
                     />
-                ))}
+                </AnimatePresence>
             </div>
             {/* Responsive Gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#6A0DAD]/70 from-40%"/>
@@ -165,6 +219,10 @@ const HeroSection = () => {
                     src="hand_heart.png"
                     alt="Hand Heart Icon"
                     className="top-0 w-40 h-40"
+                    loading="lazy"
+                    decoding="async"
+                    width={160}
+                    height={160}
                 />
             </motion.div>
             <motion.div 
@@ -177,6 +235,10 @@ const HeroSection = () => {
                     src="donation_bottle.png"
                     alt="Donation Bottle"
                     className=" w-40 h-40"
+                    loading="lazy"
+                    decoding="async"
+                    width={160}
+                    height={160}
                 />
             </motion.div>
         </section>
@@ -186,7 +248,7 @@ const HeroSection = () => {
 
 const CharityService = () => {
     return (
-        <section className="relative px-4 sm:px-6 md:px-20 py-12 md:py-20 bg-white w-full bg-gray-300">
+        <section className="relative px-4 sm:px-6 md:px-20 py-10 md:py-14 bg-white w-full bg-gray-300">
         <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -198,10 +260,10 @@ const CharityService = () => {
                     <h1 className="font-bold text-xl sm:text-2xl mb-2">For Her. With Her. Always</h1>
                     <p className="text-gray-600 max-w-2xl text-sm sm:text-base">We believe in a world where every woman is seen, supported, and empowered—with love leading every step we take.</p>
                 </motion.div>
-                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8 max-w-none">
+                <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-6 max-w-none">
                     {/*Service Cards*/}
                     <motion.div 
-                        className="bg-purple-700 text-white p-6 md:p-8 rounded-lg shadow-lg relative overflow-hidden min-h-[200px] md:min-h-[250px]"
+                        className="bg-purple-700 text-white p-5 md:p-6 rounded-lg shadow-lg relative overflow-hidden min-h-[180px] md:min-h-[220px]"
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
@@ -218,7 +280,7 @@ const CharityService = () => {
                         </div>
                     </motion.div>
                     <motion.div 
-                        className="relative bg-white border border-gray-200 p-6 md:p-8 rounded-lg shadow-lg"
+                        className="relative bg-white border border-gray-200 p-5 md:p-6 rounded-lg shadow-lg"
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
@@ -235,7 +297,7 @@ const CharityService = () => {
                         </div>
                     </motion.div>
                     <motion.div 
-                        className="bg-white border border-gray-200 p-6 md:p-8 rounded-lg shadow-lg relative overflow-hidden"
+                        className="bg-white border border-gray-200 p-5 md:p-6 rounded-lg shadow-lg relative overflow-hidden"
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
@@ -264,11 +326,15 @@ const CharityService = () => {
                     src="flower.png"
                     alt="Hand Heart Icon"
                     className="top-0 w-30 h-30"
+                    loading="lazy"
+                    decoding="async"
+                    width={120}
+                    height={120}
                 />
             </motion.div>
             {/* Button */}
             <motion.div 
-                className="flex items-center justify-center mt-8 md:mt-10"
+                className="flex items-center justify-center mt-6 md:mt-8"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
@@ -285,103 +351,344 @@ const CharityService = () => {
     )
 }
 
-const AboutUs = ()=>{
+const CampaignHighlights = () => {
+    const [campaigns, setCampaigns] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [useFallbackCampaigns, setUseFallbackCampaigns] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadCampaigns() {
+            setLoading(true);
+            setError(null);
+            setUseFallbackCampaigns(false);
+            try {
+                const data = await fetchActiveCampaigns();
+                if (cancelled) return;
+                setCampaigns(Array.isArray(data) ? data.slice(0, 3) : []);
+            } catch (err) {
+                if (!cancelled) {
+                    const recoverable = isRecoverableApiError(err);
+                    setCampaigns(recoverable ? FALLBACK_CAMPAIGNS.slice(0, 3) : []);
+                    setUseFallbackCampaigns(recoverable);
+                    setError(recoverable ? null : "Unable to load campaign highlights right now.");
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        void loadCampaigns();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     return (
-        <section className="relative w-full py-0 mb-12 md:mb-20">
-            <div className="flex flex-col md:flex-row bg-[#6A0DAD] h-80 md:min-h-[502px] overflow-hidden">
-
-                {/* Left: Image */}
-                <motion.div 
-                    className="w-full md:w-1/2 h-full"
-                    initial={{ opacity: 0, x: -50 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8 }}
+        <section className="bg-[#F7F6F8] py-10 md:py-14">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <motion.p
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
                     viewport={{ once: true }}
+                    className="text-sm font-semibold text-[#F036DC] mb-4"
                 >
-                    <img
-                        src="vector.png"
-                        alt="Smiling Girl"
-                        className="w-full object-cover aspect-3/2"
-                    />
-                </motion.div>
-
-                {/* Right: Content */}
-                <motion.div 
-                    className="relative w-full md:w-1/2 h-full flex flex-col justify-center px-4 sm:px-6 md:px-12 text-white"
-                    initial={{ opacity: 0, x: 50 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
+                    Our Campaign
+                </motion.p>
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.05 }}
                     viewport={{ once: true }}
+                    className="max-w-xl text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight font-playfair"
                 >
-                    <h3 className="uppercase text-xs sm:text-sm tracking-wider font-semibold text-white mb-2 text-purple-600">
-                        About Us
-                    </h3>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black mb-3 md:mb-4">
-                        Committed to Compassion and Community
-                    </h2>
-                    <p className="text-purple-200 text-sm sm:text-base leading-relaxed max-w-xl mb-4 md:mb-6">
-                        At the heart of our organization is a deep commitment to compassion and community.
-                        We believe that every individual deserves respect, support, and the opportunity to thrive.
-                        Our mission is to provide inclusive services that cater to the diverse needs of people from all
-                        walks of life.
+                    Giving Help To Those Who Need It
+                </motion.h2>
+
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {loading &&
+                        Array.from({ length: 3 }, (_, index) => (
+                            <div key={`campaign-skeleton-${index}`} className="rounded-3xl bg-white p-6 shadow-sm animate-pulse">
+                                <div className="aspect-[16/10] rounded-2xl bg-gray-200" />
+                                <div className="mt-5 h-5 w-4/5 rounded bg-gray-200" />
+                                <div className="mt-3 h-5 w-3/5 rounded bg-gray-200" />
+                                <div className="mt-8 h-8 w-full rounded bg-gray-200" />
+                                <div className="mt-5 h-12 w-full rounded-xl bg-gray-200" />
+                            </div>
+                        ))}
+
+                    {!loading &&
+                        campaigns.map((campaign, index) => {
+                            const image = getResponsiveImage(campaign.image, {
+                                widths: [360, 520, 760, 980],
+                                aspectRatio: 16 / 10,
+                                sizes: "(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw",
+                            });
+
+                            return (
+                                <motion.div
+                                    key={campaign.id}
+                                    initial={{ opacity: 0, y: 24 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.45, delay: index * 0.08 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <Link
+                                        to={`/campaigns/${campaign.id}`}
+                                        className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group border border-gray-100"
+                                    >
+                                        <div className="relative w-full aspect-[16/10] overflow-hidden">
+                                            <img
+                                                src={image.src}
+                                                srcSet={image.srcSet}
+                                                sizes={image.sizes}
+                                                alt={campaign.title}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                loading="lazy"
+                                                decoding="async"
+                                                width={980}
+                                                height={612}
+                                            />
+                                            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
+                                                <span className="text-[#7F19E6] font-bold text-[10px] uppercase tracking-wider">
+                                                    {campaign.category}
+                                                </span>
+                                            </div>
+                                            {campaign.label && (
+                                                <span className="absolute top-4 right-4 rounded-full bg-[#F7B500] text-[10px] font-bold text-[#4A2A00] px-3 py-1 shadow-sm uppercase tracking-wide">
+                                                    {campaign.label}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="p-6 flex flex-col gap-4">
+                                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#7F19E6] transition-colors">
+                                                {campaign.title}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 line-clamp-2">
+                                                {campaign.shortDescription}
+                                            </p>
+                                            <CampaignCardProgressBar raised={campaign.raised} goal={campaign.goal} />
+                                            <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto text-xs">
+                                                <span className="text-gray-500">{campaign.location}</span>
+                                                <span className="inline-flex items-center gap-1 text-[#7F19E6] font-semibold">
+                                                    View details
+                                                    <ArrowRight className="h-3 w-3" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            );
+                        })}
+                </div>
+
+                {!loading && Boolean(error) && (
+                    <p className="mt-6 text-sm text-rose-600">{error}</p>
+                )}
+
+                {!loading && useFallbackCampaigns && (
+                    <p className="mt-2 text-sm text-amber-600">
+                        Live campaign data is temporarily unavailable. Showing fallback campaigns.
                     </p>
+                )}
+
+                {!loading && campaigns.length === 0 && !error && (
+                    <p className="mt-6 text-sm text-gray-600">Campaign highlights will appear here soon.</p>
+                )}
+
+                <div className="mt-8 flex justify-center lg:justify-end">
                     <Link
-                        to="/about"
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded-full py-2 px-5 w-fit transition-all duration-300 hover:scale-105"
+                        to="/campaigns"
+                        className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[#6A0DAD] hover:text-[#F036DC]"
                     >
-                        Learn more
+                        View all campaigns
+                        <ArrowRight className="h-4 w-4" />
                     </Link>
-                    <motion.div 
-                        className="absolute bottom-0 -left-10 hidden lg:block"
-                        initial={{ opacity: 0, scale: 0 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8, delay: 0.5 }}
-                        viewport={{ once: true }}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+const WHO_WE_ARE_POINTS = [
+    "Support women and girls in urgent need",
+    "Build safe spaces for learning and healing",
+    "Create lasting impact through community-led programs",
+    "Grow a compassionate network of changemakers",
+];
+
+const WHO_WE_ARE_PRIMARY_FALLBACK = "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014550/5_wtvump.avif";
+const WHO_WE_ARE_SECONDARY_FALLBACK = "https://res.cloudinary.com/dlxil9dpo/image/upload/v1758014542/1_suxmxr.avif";
+const WHO_WE_ARE_PRIMARY_IMAGE_SOURCES = [
+    "/who-we-are-1.jpg",
+    "/who-we-are-1.jpeg",
+    "/who-we-are-1.png",
+    "/who-we-are-1.webp",
+    "/who-we-are-1.avif",
+    WHO_WE_ARE_PRIMARY_FALLBACK,
+];
+const WHO_WE_ARE_SECONDARY_IMAGE_SOURCES = [
+    "/who-we-are-2.jpg",
+    "/who-we-are-2.jpeg",
+    "/who-we-are-2.png",
+    "/who-we-are-2.webp",
+    "/who-we-are-2.avif",
+    WHO_WE_ARE_SECONDARY_FALLBACK,
+];
+
+const WHO_WE_ARE_SECTION_MOTION = {
+    hidden: { opacity: 0, y: 18 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.55,
+            ease: "easeOut",
+            staggerChildren: 0.1,
+        },
+    },
+};
+
+const WHO_WE_ARE_ITEM_MOTION = {
+    hidden: { opacity: 0, y: 14 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.45, ease: "easeOut" },
+    },
+};
+
+const AboutUs = ()=>{
+    const reduceMotion = useReducedMotion();
+    const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
+    const [secondaryImageIndex, setSecondaryImageIndex] = useState(0);
+    const primaryImage = WHO_WE_ARE_PRIMARY_IMAGE_SOURCES[Math.min(primaryImageIndex, WHO_WE_ARE_PRIMARY_IMAGE_SOURCES.length - 1)];
+    const secondaryImage = WHO_WE_ARE_SECONDARY_IMAGE_SOURCES[Math.min(secondaryImageIndex, WHO_WE_ARE_SECONDARY_IMAGE_SOURCES.length - 1)];
+
+    return (
+        <section className="relative bg-white py-8 md:py-12">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid gap-8 lg:grid-cols-[1.02fr_1fr] items-center">
+                <motion.div
+                    className="relative pb-0 md:pb-14"
+                    initial={{ opacity: 0, x: -40 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true }}
+                >
+                    <motion.div
+                        className="relative overflow-hidden rounded-3xl shadow-[0_22px_60px_-28px_rgba(106,13,173,0.45)]"
+                        animate={reduceMotion ? undefined : { y: [0, -7, 0] }}
+                        transition={reduceMotion ? undefined : { duration: 6.5, repeat: Infinity, repeatType: "loop", ease: "easeInOut" }}
                     >
                         <img
-                            src="gift.png"
-                            alt="Hand Heart Icon"
-                            className="top-0 w-20 h-20"
+                            src={primaryImage}
+                            alt="Giving Her E.V.E volunteers supporting students"
+                            className="w-full aspect-[4/3] object-cover object-center"
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="async"
+                            width={1200}
+                            height={900}
+                            onError={() =>
+                                setPrimaryImageIndex((currentIndex) =>
+                                    Math.min(currentIndex + 1, WHO_WE_ARE_PRIMARY_IMAGE_SOURCES.length - 1),
+                                )
+                            }
+                        />
+                    </motion.div>
+                    <motion.div
+                        className="absolute -top-5 -left-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[#6A0DAD] text-white shadow-lg md:h-14 md:w-14"
+                        animate={reduceMotion ? undefined : { y: [0, -4, 0], rotate: [0, 4, 0] }}
+                        transition={reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, repeatType: "loop", ease: "easeInOut" }}
+                    >
+                        <Heart className="h-5 w-5 md:h-6 md:w-6" />
+                    </motion.div>
+                    <motion.div
+                        className="mt-4 ml-auto w-[62%] overflow-hidden rounded-2xl border-4 border-white shadow-xl md:absolute md:-bottom-6 md:right-2 md:mt-0 md:w-[52%]"
+                        animate={reduceMotion ? undefined : { y: [0, 5, 0] }}
+                        transition={reduceMotion ? undefined : { duration: 5.5, repeat: Infinity, repeatType: "loop", ease: "easeInOut" }}
+                    >
+                        <img
+                            src={secondaryImage}
+                            alt="Giving Her E.V.E team member speaking to a community group"
+                            className="w-full aspect-[4/3] object-cover object-center"
+                            loading="lazy"
+                            decoding="async"
+                            width={760}
+                            height={570}
+                            onError={() =>
+                                setSecondaryImageIndex((currentIndex) =>
+                                    Math.min(currentIndex + 1, WHO_WE_ARE_SECONDARY_IMAGE_SOURCES.length - 1),
+                                )
+                            }
                         />
                     </motion.div>
                 </motion.div>
+
+                <motion.div
+                    className="lg:pl-5"
+                    variants={WHO_WE_ARE_SECTION_MOTION}
+                    whileInView="show"
+                    initial="hidden"
+                    transition={{ delayChildren: 0.1 }}
+                    viewport={{ once: true }}
+                >
+                    <motion.p variants={WHO_WE_ARE_ITEM_MOTION} className="text-sm font-semibold text-[#6A0DAD] mb-3">Who we are</motion.p>
+                    <motion.h2 variants={WHO_WE_ARE_ITEM_MOTION} className="font-playfair text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                        We're a Non-Profit Charity & NGO Organization
+                    </motion.h2>
+                    <motion.div variants={WHO_WE_ARE_ITEM_MOTION} className="mt-4 h-1 w-20 rounded-full bg-[#F036DC]" />
+                    <motion.p variants={WHO_WE_ARE_ITEM_MOTION} className="mt-5 text-base text-gray-600 leading-relaxed max-w-xl">
+                        Giving Her E.V.E exists to restore dignity, opportunity, and hope for women and girls through
+                        practical support in health, education, and community empowerment.
+                    </motion.p>
+                    <motion.ul variants={WHO_WE_ARE_ITEM_MOTION} className="mt-6 space-y-2.5">
+                        {WHO_WE_ARE_POINTS.map((point) => (
+                            <motion.li
+                                key={point}
+                                className="flex items-start gap-3 text-gray-700"
+                                variants={WHO_WE_ARE_ITEM_MOTION}
+                            >
+                                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F036DC]/10 text-[#F036DC]">
+                                    <Check className="h-3.5 w-3.5" />
+                                </span>
+                                <span className="text-sm sm:text-base font-medium">{point}</span>
+                            </motion.li>
+                        ))}
+                    </motion.ul>
+                    <motion.div variants={WHO_WE_ARE_ITEM_MOTION}>
+                        <Link
+                            to="/about"
+                            className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#F036DC] px-7 py-3 text-white font-semibold transition-all duration-300 hover:bg-[#6A0DAD] hover:scale-105"
+                        >
+                            About Us
+                        </Link>
+                    </motion.div>
+                </motion.div>
             </div>
-            <motion.div 
-                className="absolute top-0 -right-1 hidden lg:block"
-                initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                viewport={{ once: true }}
-            >
-                <img
-                    src="calendar.png"
-                    alt="Hand Heart Icon"
-                    className="top-0 w-40 h-40"
-                />
-            </motion.div>
-            <motion.div 
-                className="absolute bottom-3 right-10  hidden lg:block"
-                initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.7 }}
-                viewport={{ once: true }}
-            >
-                <img
-                    src="cupcake.png"
-                    alt="Cup Cake"
-                    className=" w-20 h-20"
-                />
-            </motion.div>
         </section>
     )
 }
 
 const CallToAction = ()=>{
     return(
-        <section className="relative py-12 md:py-20 bg-[#6A0DAD] text-white mb-8 md:mb-10">
-            <div className="absolute z-0 inset-0 bg-cover bg-center bg-no-repeat opacity-50"
-                 style={{backgroundImage: `url(${bg_image})`}}>
-
+        <section className="relative py-10 md:py-14 bg-[#6A0DAD] text-white mb-6 md:mb-8">
+            <div className="absolute z-0 inset-0 overflow-hidden">
+                <img
+                    src={bg_image}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full object-cover opacity-50"
+                    loading="lazy"
+                    decoding="async"
+                    width={1920}
+                    height={1080}
+                />
             </div>
             <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <motion.h2 
@@ -428,18 +735,41 @@ const CallToAction = ()=>{
     )
 }
 
+const SectionFallback = () => (
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <div className="h-44 rounded-2xl bg-slate-100 animate-pulse" />
+    </section>
+);
+
 const HomePage = () => {
     return (
         <div className="min-h-screen">
             <Header/>
             <HeroSection/>
             <CharityService/>
-            <SuccessStories/>
-            <Steps/>
-            <Community/>
-            <Testimonials/>
+            <AboutUs/>
+            <DeferredMount fallback={<SectionFallback />}>
+                <Suspense fallback={<SectionFallback />}>
+                    <SuccessStories compact />
+                </Suspense>
+            </DeferredMount>
+            <DeferredMount fallback={<SectionFallback />}>
+                <Suspense fallback={<SectionFallback />}>
+                    <Steps/>
+                </Suspense>
+            </DeferredMount>
+            <CampaignHighlights/>
+            <DeferredMount fallback={<SectionFallback />}>
+                <Suspense fallback={<SectionFallback />}>
+                    <Testimonials compact />
+                </Suspense>
+            </DeferredMount>
             <CallToAction/>
-            <Team/>
+            <DeferredMount fallback={<SectionFallback />}>
+                <Suspense fallback={<SectionFallback />}>
+                    <Team compact />
+                </Suspense>
+            </DeferredMount>
             <Footer/>
         </div>
     )
