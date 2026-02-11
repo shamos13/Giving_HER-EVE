@@ -16,7 +16,10 @@ const parsedPort = Number.parseInt(String(process.env.PORT || "8080"), 10);
 const PORT = Number.isNaN(parsedPort) ? 8080 : parsedPort;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "dev-admin-token";
 const DATABASE_URL = process.env.DATABASE_URL?.trim() || "";
-const shouldUseSSL = process.env.DATABASE_SSL === "true" || DATABASE_URL.includes("supabase.co");
+const shouldUseSSL =
+  process.env.DATABASE_SSL === "true" ||
+  DATABASE_URL.includes("supabase.co") ||
+  DATABASE_URL.includes("supabase.com");
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME?.trim() || "";
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY?.trim() || "";
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET?.trim() || "";
